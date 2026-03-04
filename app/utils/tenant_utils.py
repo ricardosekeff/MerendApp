@@ -6,6 +6,25 @@ def get_current_tenant_id():
     """Retorna o ID da cantina do contexto atual (flask.g)."""
     return getattr(g, "canteen_id", None)
 
+def roles_required(*roles):
+    """
+    Decorator para restringir acesso a determinadas roles.
+    Ex: @roles_required('ADMIN_MASTER', 'GESTOR')
+    """
+    def decorator(f):
+        @wraps(f)
+        @jwt_required()
+        def decorated_function(*args, **kwargs):
+            claims = get_jwt()
+            user_role = claims.get("role")
+            
+            if user_role not in roles:
+                return {"error": "Acesso negado", "message": f"Requer roles: {roles}"}, 403
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 def resolve_tenant():
     """
     Middleware (hook) para extrair o canteen_id do JWT.

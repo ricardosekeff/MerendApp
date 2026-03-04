@@ -3,11 +3,13 @@ from app.api import api_bp
 from app.extensions import db
 from app.models.school import School
 from app.api.schemas import SchoolSchema
+from app.utils.tenant_utils import roles_required
 
 school_schema = SchoolSchema()
 schools_schema = SchoolSchema(many=True)
 
 @api_bp.route("/schools", methods=["GET"])
+@roles_required("ADMIN_MASTER")
 def get_schools():
     """Retorna lista de todas as escolas."""
     schools = School.query.all()
