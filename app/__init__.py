@@ -26,7 +26,13 @@ def create_app(config_name=None):
     celery_init_app(app)
 
     from app.api.errors import register_error_handlers
+    from app.utils.tenant_utils import resolve_tenant
+    
     register_error_handlers(app)
+    
+    @app.before_request
+    def handle_tenant():
+        resolve_tenant()
 
     # Registro de Blueprints
     from app.api import api_bp
