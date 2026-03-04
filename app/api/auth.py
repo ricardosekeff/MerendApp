@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from app.api import api_bp
 from app.models.user import User
 
@@ -43,3 +43,24 @@ def login():
         }), 200
 
     return jsonify({"error": "Credenciais inválidas"}), 401
+
+@api_bp.route("/auth/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    """
+    Gera um novo access token a partir de um refresh token válido.
+    Mantém claims de role e canteen_id.
+    """
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user or not user.active:
+        return jsonify({"error": "Usuário inválido ou inativo"}), 401
+        
+    additional_claims = {
+        "role": user.role,
+        "canteen_id": str(user.canteen_id) if user.canteen_id else None
+    }
+    
+    new_access_token = create_access_token(identity=user_id, additional_claims=additional_claims)
+    return jsonify({"access_token": new_access_token}), 200
