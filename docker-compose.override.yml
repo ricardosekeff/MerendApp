@@ -1,0 +1,24 @@
+services:
+
+  api:
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_DEBUG=1
+      - APP_ENV=development
+    ports:
+      - "8000:8000"
+
+  worker:
+    volumes:
+      - .:/app
+    environment:
+      - APP_ENV=development
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
