@@ -1,0 +1,121 @@
+services:
+
+  # ──────────────────────────────────────────────
+  # Nginx — Reverse Proxy + SSL Termination
+  # ──────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: merendapp_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    networks:
+      - merendapp_net
+
+  # ──────────────────────────────────────────────
+  # API — Flask + Gunicorn
+  # ──────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: merendapp_api
+    restart: always
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - merendapp_net
+
+  # ──────────────────────────────────────────────
+  # PostgreSQL 15 — Banco de Dados Principal
+  # (sem porta pública — apenas rede interna)
+  # ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: merendapp_postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - merendapp_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ──────────────────────────────────────────────
+  # Redis 7 — Cache + Celery Broker
+  # (sem porta pública — apenas rede interna)
+  # ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: merendapp_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - merendapp_net
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ──────────────────────────────────────────────
+  # Celery Worker — Tarefas Assíncronas
+  # Responsável por: webhooks de pagamento,
+  # expiração automática de tokens, emails, etc.
+  # ──────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: merendapp_worker
+    restart: always
+    env_file:
+      - .env
+    command: [ "celery", "-A", "app.extensions.celery", "worker", "--loglevel=info", "--concurrency=2" ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - merendapp_net
+
+# ──────────────────────────────────────────────
+# Redes e Volumes
+# ──────────────────────────────────────────────
+networks:
+  merendapp_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
