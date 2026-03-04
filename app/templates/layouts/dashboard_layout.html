@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+    /* Sidebar Specific Styles */
+    #wrapper {
+        overflow-x: hidden;
+        background: var(--bg-light);
+    }
+
+    [data-bs-theme="dark"] #wrapper {
+        background: var(--bg-dark);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="wrapper">
+    {% include 'components/_sidebar.html' %}
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <!-- Navbar -->
+        {% include 'components/_navbar.html' %}
+
+        <!-- Main Content -->
+        <div class="container-fluid py-4 px-4">
+            {% include 'components/_breadcrumb.html' %}
+            {% include 'components/_flash_messages.html' %}
+
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
