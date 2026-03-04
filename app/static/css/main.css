@@ -1,0 +1,67 @@
+:root {
+  --primary: #FF9900;
+  --primary-dark: #CC7A00;
+  --primary-light: #FFB84D;
+  --accent: #FF6B00;
+  --surface-dark: #1A1A2E;
+  --bg-light: #F5F7FA;
+  --bg-dark: #121212;
+  --text-light: #212529;
+  --text-dark: #E0E0E0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Auth Pages Background */
+.auth-bg {
+  background: linear-gradient(135deg, var(--surface-dark) 0%, #2D1B00 100%);
+}
+
+.text-primary {
+  color: var(--primary) !important;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+/* Sidebar Styling */
+#sidebar-wrapper {
+  min-height: 100vh;
+  margin-left: -15rem;
+  transition: margin 0.25s ease-out;
+  background-color: var(--surface-dark);
+}
+
+#sidebar-wrapper .sidebar-heading {
+  padding: 0.875rem 1.25rem;
+  font-size: 1.2rem;
+}
+
+#sidebar-wrapper .list-group {
+  width: 15rem;
+}
+
+#page-content-wrapper {
+  min-width: 100vw;
+}
+
+@media (min-width: 768px) {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+
+  #page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+}

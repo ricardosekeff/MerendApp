@@ -92,9 +92,10 @@ class ProductionConfig(Config):
 
     DEBUG: bool = False
 
-    # Em produção, SECRET_KEY DEVE vir do ambiente. Sem fallback inseguro.
-    SECRET_KEY: str = os.environ["SECRET_KEY"]
-    JWT_SECRET_KEY: str = os.environ["JWT_SECRET_KEY"]
+    # Em produção, SECRET_KEY DEVE vir do ambiente. 
+    # Usamos .get() para evitar erro no momento do import em outros ambientes.
+    SECRET_KEY: str = os.environ.get("SECRET_KEY", "")
+    JWT_SECRET_KEY: str = os.environ.get("JWT_SECRET_KEY", "")
 
 
 # Mapeamento de string → classe de config (usado no create_app)

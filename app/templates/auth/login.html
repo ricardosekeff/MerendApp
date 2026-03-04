@@ -1,0 +1,17 @@
+{% extends "layouts/auth_layout.html" %}
+{% block title %}Entrar · MerendApp{% endblock %}
+{% block auth_card %}
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">E-mail</label>
+        <input type="email" class="form-control" name="email" placeholder="usuario@escola.com.br" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Senha</label>
+        <input type="password" class="form-control" name="password" required>
+    </div>
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary fw-bold">ENTRAR NO SISTEMA</button>
+    </div>
+</form>
+{% endblock %}
