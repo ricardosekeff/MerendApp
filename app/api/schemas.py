@@ -5,6 +5,7 @@ from app.models.canteen import Canteen
 from app.models.category import Category
 from app.models.product import Product
 from app.models.combo import Combo, ComboItem
+from app.models.product_price_log import ProductPriceLog
 
 class SchoolSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -83,3 +84,9 @@ class ComboSchema(ma.SQLAlchemyAutoSchema):
 
     def get_total_price(self, obj):
         return obj.calculate_total_price()
+
+class ProductPriceLogSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = ProductPriceLog
+        include_fk = True
+        load_instance = True

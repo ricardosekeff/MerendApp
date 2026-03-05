@@ -5,6 +5,7 @@ from app.extensions import db
 from app.models.product import Product
 from app.models.category import Category
 from app.models.canteen import Canteen
+from app.models.product_price_log import ProductPriceLog
 
 
 @web_bp.route("/products")
@@ -57,8 +58,23 @@ def edit_product(product_id):
             product.name = request.form.get("name")
             product.short_name = request.form.get("short_name")
             product.stock = int(request.form.get("stock", 0))
-            product.cost_price = float(request.form.get("cost_price", 0.0))
-            product.sell_price = float(request.form.get("sell_price", 0.0))
+            new_cost = float(request.form.get("cost_price", 0.0))
+            new_sell = float(request.form.get("sell_price", 0.0))
+            
+            # Registra log se houver variação no preço
+            if product.cost_price != new_cost or product.sell_price != new_sell:
+                price_log = ProductPriceLog(
+                    product_id=product.id,
+                    user_id=current_user.id,
+                    old_cost_price=product.cost_price,
+                    new_cost_price=new_cost,
+                    old_sell_price=product.sell_price,
+                    new_sell_price=new_sell
+                )
+                db.session.add(price_log)
+
+            product.cost_price = new_cost
+            product.sell_price = new_sell
             product.category_id = request.form.get("category_id")
             product.status = request.form.get("status") == "on"
             db.session.commit()
