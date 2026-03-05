@@ -62,3 +62,22 @@ def update_wallet_limits():
     db.session.commit()
     flash("Limites de gastos atualizados com sucesso!", "success")
     return redirect(url_for("web.parent_wallet"))
+
+@web_bp.route("/wallet/recharge_permission", methods=["POST"])
+@login_required
+def update_recharge_permission_web():
+    """Toggle web da permissão de recarregar a carteira via html"""
+    wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+    if not wallet:
+        flash("Carteira não encontrada.", "danger")
+        return redirect(url_for("web.parent_wallet"))
+
+    # Verifica se o checkbox 'student_can_recharge' veia no payload (como on/off/true)
+    student_can_recharge = request.form.get("student_can_recharge") == "on"
+
+    wallet.student_can_recharge = student_can_recharge
+    db.session.commit()
+    
+    status_msg = "Permitir" if student_can_recharge else "Bloquear"
+    flash(f"Configuração '{status_msg} aluno recarregar' salva com sucesso!", "success")
+    return redirect(url_for("web.parent_wallet"))

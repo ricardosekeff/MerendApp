@@ -51,115 +51,136 @@
             </div>
         </div>
 
-        <!-- Configuração de Limites -->
-        <div class="col-lg-8">
+        <!-- Configuração de Limites e Restrições -->
+        <div class="col-lg-8 d-flex flex-column gap-4">
+
+            <!-- Controle de Recarga Autônoma -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="bi bi-person-fill-lock text-warning me-2"></i>Recarga por
+                            Terceiros</h5>
+                        <p class="text-muted small mb-0">Permitir que o aluno inicie pagamentos ou recarregue fundos
+                            autonomamente pelo aplicativo dele.</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('web.update_recharge_permission_web') }}" class="ms-3 m-0"
+                        id="form-recharge-perm">
+                        <div class="form-check form-switch fs-4 m-0 d-flex justify-content-end align-items-center">
+                            <input class="form-check-input" type="checkbox" role="switch" name="student_can_recharge"
+                                id="student_can_recharge" {% if wallet.student_can_recharge %}checked{% endif %}
+                                onChange="document.getElementById('form-recharge-perm').submit();">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
                     <h5 class="fw-bold mb-0"><i class="bi bi-shield-check text-success me-2"></i>Controle de Limites
                     </h5>
                     <p class="text-muted small mb-0 mt-1">Defina o máximo que o aluno pode gastar em períodos
                         específicos.</p>
-                </div>
 
-                <div class="card-body p-4 p-md-5">
-                    {% set daily_limit = namespace(amount=0.0) %}
-                    {% set weekly_limit = namespace(amount=0.0) %}
-                    {% set monthly_limit = namespace(amount=0.0) %}
+                    <div class="card-body p-4 p-md-5">
+                        {% set daily_limit = namespace(amount=0.0) %}
+                        {% set weekly_limit = namespace(amount=0.0) %}
+                        {% set monthly_limit = namespace(amount=0.0) %}
 
-                    {% for limit in wallet.limits %}
-                    {% if limit.period_type == 'daily' %}{% set daily_limit.amount = limit.amount %}{% endif %}
-                    {% if limit.period_type == 'weekly' %}{% set weekly_limit.amount = limit.amount %}{% endif %}
-                    {% if limit.period_type == 'monthly' %}{% set monthly_limit.amount = limit.amount %}{% endif %}
-                    {% endfor %}
+                        {% for limit in wallet.limits %}
+                        {% if limit.period_type == 'daily' %}{% set daily_limit.amount = limit.amount %}{% endif %}
+                        {% if limit.period_type == 'weekly' %}{% set weekly_limit.amount = limit.amount %}{% endif %}
+                        {% if limit.period_type == 'monthly' %}{% set monthly_limit.amount = limit.amount %}{% endif %}
+                        {% endfor %}
 
-                    <form method="POST" action="{{ url_for('web.update_wallet_limits') }}">
-                        <div class="list-group list-group-flush mb-4">
-                            <!-- Diário -->
-                            <div class="list-group-item px-0 py-3 border-light border-bottom">
-                                <div class="row align-items-center g-3">
-                                    <div class="col-md-5">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded p-2 text-primary me-3">
-                                                <i class="bi bi-calendar-day fs-5"></i>
+                        <form method="POST" action="{{ url_for('web.update_wallet_limits') }}">
+                            <div class="list-group list-group-flush mb-4">
+                                <!-- Diário -->
+                                <div class="list-group-item px-0 py-3 border-light border-bottom">
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-md-5">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded p-2 text-primary me-3">
+                                                    <i class="bi bi-calendar-day fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">Limite Diário</h6>
+                                                    <small class="text-muted">Gasto máx. por dia</small>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-0">Limite Diário</h6>
-                                                <small class="text-muted">Gasto máx. por dia</small>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">R$</span>
+                                                <input type="number" step="0.01" min="0"
+                                                    class="form-control border-start-0" name="daily_amount"
+                                                    value="{{ daily_limit.amount }}" placeholder="Ex: 15.00">
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-7">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-end-0">R$</span>
-                                            <input type="number" step="0.01" min="0" class="form-control border-start-0"
-                                                name="daily_amount" value="{{ daily_limit.amount }}"
-                                                placeholder="Ex: 15.00">
+                                </div>
+
+                                <!-- Semanal -->
+                                <div class="list-group-item px-0 py-3 border-light border-bottom">
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-md-5">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded p-2 text-primary me-3">
+                                                    <i class="bi bi-calendar-week fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">Limite Semanal</h6>
+                                                    <small class="text-muted">Gasto máx. por semana</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">R$</span>
+                                                <input type="number" step="0.01" min="0"
+                                                    class="form-control border-start-0" name="weekly_amount"
+                                                    value="{{ weekly_limit.amount }}" placeholder="Ex: 50.00">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mensal -->
+                                <div class="list-group-item px-0 py-3 border-light">
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-md-5">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded p-2 text-primary me-3">
+                                                    <i class="bi bi-calendar-month fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">Limite Mensal</h6>
+                                                    <small class="text-muted">Gasto máx. por mês</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">R$</span>
+                                                <input type="number" step="0.01" min="0"
+                                                    class="form-control border-start-0" name="monthly_amount"
+                                                    value="{{ monthly_limit.amount }}" placeholder="Ex: 200.00">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Semanal -->
-                            <div class="list-group-item px-0 py-3 border-light border-bottom">
-                                <div class="row align-items-center g-3">
-                                    <div class="col-md-5">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded p-2 text-primary me-3">
-                                                <i class="bi bi-calendar-week fs-5"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-0">Limite Semanal</h6>
-                                                <small class="text-muted">Gasto máx. por semana</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-7">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-end-0">R$</span>
-                                            <input type="number" step="0.01" min="0" class="form-control border-start-0"
-                                                name="weekly_amount" value="{{ weekly_limit.amount }}"
-                                                placeholder="Ex: 50.00">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit"
+                                    class="btn btn-success px-4 py-2 rounded-pill fw-medium shadow-sm">
+                                    <i class="bi bi-check2-circle me-1"></i> Salvar Limites
+                                </button>
                             </div>
-
-                            <!-- Mensal -->
-                            <div class="list-group-item px-0 py-3 border-light">
-                                <div class="row align-items-center g-3">
-                                    <div class="col-md-5">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded p-2 text-primary me-3">
-                                                <i class="bi bi-calendar-month fs-5"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-0">Limite Mensal</h6>
-                                                <small class="text-muted">Gasto máx. por mês</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-7">
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-end-0">R$</span>
-                                            <input type="number" step="0.01" min="0" class="form-control border-start-0"
-                                                name="monthly_amount" value="{{ monthly_limit.amount }}"
-                                                placeholder="Ex: 200.00">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success px-4 py-2 rounded-pill fw-medium shadow-sm">
-                                <i class="bi bi-check2-circle me-1"></i> Salvar Limites
-                            </button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
-</div>
-{% endblock %}
+    {% endblock %}

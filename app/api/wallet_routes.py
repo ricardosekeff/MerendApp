@@ -83,3 +83,21 @@ def set_wallet_limits(wallet_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
+
+@api_bp.route("/wallets/<uuid:wallet_id>/recharge_permission", methods=["PUT"])
+@jwt_required()
+def update_recharge_permission(wallet_id):
+    """Ativa ou desativa a permissão do aluno fazer recargas autônomas."""
+    wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
+    data = request.get_json()
+
+    if "student_can_recharge" not in data:
+        return jsonify({"message": "Campo 'student_can_recharge' obrigatorio."}), 400
+
+    try:
+        wallet.student_can_recharge = bool(data["student_can_recharge"])
+        db.session.commit()
+        return jsonify(wallet_schema.dump(wallet)), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500

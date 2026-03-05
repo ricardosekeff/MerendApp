@@ -105,4 +105,5 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
         
+    student_can_recharge = fields.Boolean(load_default=True)
     limits = fields.List(fields.Nested(WalletLimitSchema), dump_only=True)
