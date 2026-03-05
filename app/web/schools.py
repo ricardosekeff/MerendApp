@@ -5,6 +5,16 @@ from app.models.school import School
 from app.extensions import db
 from app.utils.tenant_utils import roles_required
 
+
+def _empty_or_none(value):
+    """Converte string vazia ou None (inclusive string literal 'None') para None (SQL NULL)."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    if not stripped or stripped.lower() == "none":
+        return None
+    return stripped
+
 @web_bp.route("/admin/schools")
 @login_required
 @roles_required("ADMIN_MASTER")
@@ -21,10 +31,10 @@ def create_school():
     if request.method == "POST":
         name = request.form.get("name")
         cnpj = request.form.get("cnpj")
-        phone = request.form.get("phone")
-        address = request.form.get("address")
-        city = request.form.get("city")
-        state = request.form.get("state")
+        phone = _empty_or_none(request.form.get("phone"))
+        address = _empty_or_none(request.form.get("address"))
+        city = _empty_or_none(request.form.get("city"))
+        state = _empty_or_none(request.form.get("state"))
         
         if not name or not cnpj:
             flash("Nome e CNPJ são obrigatórios.", "danger")
@@ -59,10 +69,10 @@ def edit_school(school_id):
     if request.method == "POST":
         school.name = request.form.get("name")
         school.cnpj = request.form.get("cnpj")
-        school.phone = request.form.get("phone")
-        school.address = request.form.get("address")
-        school.city = request.form.get("city")
-        school.state = request.form.get("state")
+        school.phone = _empty_or_none(request.form.get("phone"))
+        school.address = _empty_or_none(request.form.get("address"))
+        school.city = _empty_or_none(request.form.get("city"))
+        school.state = _empty_or_none(request.form.get("state"))
         school.active = "active" in request.form
         
         try:

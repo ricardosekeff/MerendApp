@@ -20,36 +20,35 @@
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label fw-bold">Nome da Escola</label>
-                            <input type="text" class="form-control" name="name"
-                                value="{{ school.name if school else '' }}" required
+                            <input type="text" class="form-control" name="name" value="{{ school.name or '' }}" required
                                 placeholder="Ex: Escola Estadual Machado de Assis">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">CNPJ</label>
-                            <input type="text" class="form-control" name="cnpj"
-                                value="{{ school.cnpj if school else '' }}" required placeholder="00.000.000/0000-00">
+                            <input type="text" class="form-control" name="cnpj" value="{{ school.cnpj or '' }}" required
+                                placeholder="00.000.000/0000-00">
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Telefone</label>
-                            <input type="text" class="form-control" name="phone"
-                                value="{{ school.phone if school else '' }}" placeholder="(00) 0000-0000">
+                            <input type="text" class="form-control" name="phone" value="{{ school.phone or '' }}"
+                                placeholder="(00) 0000-0000">
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-bold">Endereço Completo</label>
-                            <input type="text" class="form-control" name="address"
-                                value="{{ school.address if school else '' }}" placeholder="Rua, Número, Bairro">
+                            <input type="text" class="form-control" name="address" value="{{ school.address or '' }}"
+                                placeholder="Rua, Número, Bairro">
                         </div>
 
                         <div class="col-md-9">
                             <label class="form-label fw-bold">Cidade</label>
-                            <input type="text" class="form-control" name="city"
-                                value="{{ school.city if school else '' }}" placeholder="Ex: São Paulo">
+                            <input type="text" class="form-control" name="city" value="{{ school.city or '' }}"
+                                placeholder="Ex: São Paulo">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold">UF</label>
-                            <input type="text" class="form-control" name="state"
-                                value="{{ school.state if school else '' }}" maxlength="2" placeholder="SP">
+                            <input type="text" class="form-control" name="state" value="{{ school.state or '' }}"
+                                maxlength="2" placeholder="SP">
                         </div>
 
                         {% if school %}
