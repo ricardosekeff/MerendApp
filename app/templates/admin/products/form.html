@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}MerendApp - {{ 'Editar' if product else 'Novo' }} Produto{% endblock %}
+
+{% block content %}
+<div class="container mt-4 max-w-lg mx-auto" style="max-width: 900px;">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('web.list_products') }}" class="btn btn-link text-decoration-none p-0 me-3 text-secondary">
+            <i class="bi bi-arrow-left fs-4"></i>
+        </a>
+        <div>
+            <h1 class="h3 fw-bold mb-0">{{ 'Editar' if product else 'Novo' }} Produto</h1>
+            <p class="text-muted mb-0">Preencha os dados do item à venda</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+            <form method="POST">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <label for="code" class="form-label fw-medium">Código Único</label>
+                        <input type="text" class="form-control form-control-lg bg-light" id="code" name="code"
+                            value="{{ product.code if product else '' }}" required placeholder="EX: PRD1">
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="name" class="form-label fw-medium">Nome Completo</label>
+                        <input type="text" class="form-control form-control-lg bg-light" id="name" name="name"
+                            value="{{ product.name if product else '' }}" required
+                            placeholder="Refrigerante Lata 350ml">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="short_name" class="form-label fw-medium">Nome Curto</label>
+                        <input type="text" class="form-control form-control-lg bg-light" id="short_name"
+                            name="short_name" value="{{ product.short_name if product else '' }}" required
+                            placeholder="Refri Lata">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="category_id" class="form-label fw-medium">Categoria do Produto</label>
+                        <select class="form-select form-select-lg bg-light" id="category_id" name="category_id"
+                            required>
+                            <option value="">Selecione uma categoria...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product and product.category_id==cat.id %}selected{%
+                                endif %}>{{ cat.name }} ({{ cat.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="stock" class="form-label fw-medium">Estoque Inicial/Atual</label>
+                        <input type="number" class="form-control form-control-lg bg-light" id="stock" name="stock"
+                            value="{{ product.stock if product else '0' }}" min="0" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="cost_price" class="form-label fw-medium text-danger">Preço de Custo (R$)</label>
+                        <input type="number" step="0.01"
+                            class="form-control form-control-lg bg-light text-danger fw-bold" id="cost_price"
+                            name="cost_price" value="{{ product.cost_price if product else '0.00' }}" required>
+                        <div class="form-text">Usado para cálculo do Dashboard Financeiro.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="sell_price" class="form-label fw-medium text-success">Preço de Venda Final
+                            (R$)</label>
+                        <input type="number" step="0.01"
+                            class="form-control form-control-lg bg-light text-success fw-bold" id="sell_price"
+                            name="sell_price" value="{{ product.sell_price if product else '0.00' }}" required>
+                        <div class="form-text">Quanto o aluno pagará por este produto.</div>
+                    </div>
+
+                    <div class="col-12 mt-4 pt-3 border-top">
+                        <div class="form-check form-switch fs-5 mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="status" name="status" {%
+                                if not product or product.status %}checked{% endif %}>
+                            <label class="form-check-label ms-2" for="status">Produto Ativo</label>
+                        </div>
+                        <div class="form-text mt-1">Produtos inativos não aparecem na listagem de venda nem no PDV e
+                            Tótens.</div>
+                    </div>
+
+                    <div class="col-12 mt-3 d-none">
+                        <label for="canteen_id" class="form-label fw-medium">Cantina</label>
+                        <select class="form-select" id="canteen_id" name="canteen_id">
+                            {% for canteen in canteens %}
+                            <option value="{{ canteen.id }}" {% if product and product.canteen_id==canteen.id
+                                %}selected{% endif %}>{{ canteen.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 pt-3 border-top">
+                    <a href="{{ url_for('web.list_products') }}"
+                        class="btn btn-light px-4 py-2 fw-medium rounded-pill">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-5 py-2 fw-medium rounded-pill shadow-sm">Salvar
+                        Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

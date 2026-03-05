@@ -1,4 +1,7 @@
-import requests
+import urllib.request
+import urllib.error
+import urllib.parse
+import json
 from flask import render_template, request, redirect, url_for, flash, current_app, session
 from app.web import web_bp
 
@@ -8,16 +11,28 @@ def _api_request(method, endpoint, data=None):
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     url = f"http://127.0.0.1:8000/api{endpoint}"
     
+    req = urllib.request.Request(url, method=method, headers=headers)
+    
+    if data:
+        json_data = json.dumps(data).encode('utf-8')
+        req.add_header('Content-Type', 'application/json')
+        req.data = json_data
+        
+    class DummyResponse:
+        def __init__(self, status_code, json_data):
+            self.status_code = status_code
+            self._json_data = json_data
+        def json(self):
+            return self._json_data
+
     try:
-        if method == "GET":
-            return requests.get(url, headers=headers)
-        elif method == "POST":
-            return requests.post(url, json=data, headers=headers)
-        elif method == "PUT":
-            return requests.put(url, json=data, headers=headers)
-        elif method == "DELETE":
-            return requests.delete(url, headers=headers)
-    except requests.RequestException:
+        with urllib.request.urlopen(req) as response:
+            res_body = response.read().decode('utf-8')
+            return DummyResponse(response.status, json.loads(res_body) if res_body else {})
+    except urllib.error.HTTPError as e:
+        res_body = e.read().decode('utf-8')
+        return DummyResponse(e.code, json.loads(res_body) if res_body else {})
+    except Exception as e:
         return None
 
 @web_bp.route("/categories")
