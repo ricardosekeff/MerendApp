@@ -1,7 +1,20 @@
 from flask import request, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from app.api import api_bp
 from app.models.user import User
+from functools import wraps
+
+def require_role(role_name):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            claims = get_jwt()
+            user_role = claims.get("role")
+            if user_role != role_name and user_role != "ADMIN_MASTER":
+                return jsonify({"error": "Acesso negado."}), 403
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
 @api_bp.route("/auth/login", methods=["POST"])
 def login():
