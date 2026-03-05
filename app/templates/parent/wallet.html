@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}MerendApp - Carteira Digital{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('web.dashboard') }}" class="btn btn-link text-decoration-none p-0 me-3 text-secondary">
+            <i class="bi bi-arrow-left fs-4"></i>
+        </a>
+        <div>
+            <h1 class="h3 fw-bold mb-0">Carteira Digital</h1>
+            <p class="text-muted mb-0">Gerencie o saldo e os limites do seu dependente</p>
+        </div>
+    </div>
+
+    {% if not wallet %}
+    <div class="card border-0 shadow-sm rounded-4 text-center p-5 mb-4 bg-light">
+        <i class="bi bi-wallet2 text-primary opacity-50 mb-3" style="font-size: 3rem;"></i>
+        <h4 class="fw-bold">Carteira Inativa</h4>
+        <p class="text-muted mb-4">O aluno ainda não possui uma carteira digital ativada para realizar compras na
+            cantina.</p>
+        <form method="POST" action="{{ url_for('web.create_wallet_web') }}">
+            <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-medium shadow-sm">
+                Ativar Carteira Agora
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="row g-4">
+        <!-- Resumo do Saldo -->
+        <div class="col-lg-4">
+            <div
+                class="card border-0 shadow-sm rounded-4 text-white bg-primary h-100 position-relative overflow-hidden">
+                <div class="position-absolute end-0 top-0 opacity-10 m-3">
+                    <i class="bi bi-currency-dollar" style="font-size: 8rem;"></i>
+                </div>
+                <div class="card-body p-4 p-md-5 d-flex flex-column justify-content-between position-relative z-1">
+                    <div>
+                        <p class="text-white-50 mb-1 fw-medium text-uppercase ls-1" style="font-size: 0.85rem;">Saldo
+                            Disponível</p>
+                        <h2 class="display-5 fw-bold mb-0">R$ {{ "%.2f"|format(wallet.balance) }}</h2>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top border-light border-opacity-25">
+                        <button class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm">
+                            <i class="bi bi-plus-circle me-2"></i> Adicionar Saldo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuração de Limites e Restrições -->
+        <div class="col-lg-8 d-flex flex-column gap-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-shield-check text-success me-2"></i>Controle de Limites
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Defina o máximo que o aluno pode gastar em períodos
+                        específicos.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    {% set daily_limit = namespace(amount=0.0) %}
+                    {% set weekly_limit = namespace(amount=0.0) %}
+                    {% set monthly_limit = namespace(amount=0.0) %}
+
+                    {% for limit in wallet.limits %}
+                    {% if limit.period_type == 'daily' %}{% set daily_limit.amount = limit.amount %}{% endif %}
+                    {% if limit.period_type == 'weekly' %}{% set weekly_limit.amount = limit.amount %}{% endif %}
+                    {% if limit.period_type == 'monthly' %}{% set monthly_limit.amount = limit.amount %}{% endif %}
+                    {% endfor %}
+
+                    <form method="POST" action="{{ url_for('web.update_wallet_limits') }}">
+                        <div class="list-group list-group-flush mb-4">
+                            <!-- Diário -->
+                            <div class="list-group-item px-0 py-3 border-light border-bottom">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-md-5">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded p-2 text-primary me-3">
+                                                <i class="bi bi-calendar-day fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">Limite Diário</h6>
+                                                <small class="text-muted">Gasto máx. por dia</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">R$</span>
+                                            <input type="number" step="0.01" min="0" class="form-control border-start-0"
+                                                name="daily_amount" value="{{ daily_limit.amount }}"
+                                                placeholder="Ex: 15.00">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Semanal -->
+                            <div class="list-group-item px-0 py-3 border-light border-bottom">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-md-5">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded p-2 text-primary me-3">
+                                                <i class="bi bi-calendar-week fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">Limite Semanal</h6>
+                                                <small class="text-muted">Gasto máx. por semana</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">R$</span>
+                                            <input type="number" step="0.01" min="0" class="form-control border-start-0"
+                                                name="weekly_amount" value="{{ weekly_limit.amount }}"
+                                                placeholder="Ex: 50.00">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mensal -->
+                            <div class="list-group-item px-0 py-3 border-light">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-md-5">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded p-2 text-primary me-3">
+                                                <i class="bi bi-calendar-month fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">Limite Mensal</h6>
+                                                <small class="text-muted">Gasto máx. por mês</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">R$</span>
+                                            <input type="number" step="0.01" min="0" class="form-control border-start-0"
+                                                name="monthly_amount" value="{{ monthly_limit.amount }}"
+                                                placeholder="Ex: 200.00">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success px-4 py-2 rounded-pill fw-medium shadow-sm">
+                                <i class="bi bi-check2-circle me-1"></i> Salvar Limites
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Card de Restrições de Consumo -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-slash-circle text-danger me-2"></i>Restrições de Consumo
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Selecione as categorias ou produtos que deseja bloquear para
+                        esta carteira.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="{{ url_for('web.update_wallet_restrictions') }}">
+                        <div class="row g-4 mb-4">
+                            <!-- Categorias -->
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2">Por Categoria</h6>
+                                <div style="max-height: 250px; overflow-y: auto;" class="pe-2">
+                                    {% for cat in categories %}
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            name="restricted_categories" id="cat_{{ cat.id }}" value="{{ cat.id }}" {%
+                                            if cat.id in restricted_categories %}checked{% endif %}>
+                                        <label class="form-check-label" for="cat_{{ cat.id }}">{{ cat.name }}</label>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted small">Nenhuma categoria cadastrada.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Produtos -->
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2">Por Produto Específico</h6>
+                                <div style="max-height: 250px; overflow-y: auto;" class="pe-2">
+                                    {% for prod in products %}
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            name="restricted_products" id="prod_{{ prod.id }}" value="{{ prod.id }}" {%
+                                            if prod.id in restricted_products %}checked{% endif %}>
+                                        <label class="form-check-label" for="prod_{{ prod.id }}">{{ prod.name }} <span
+                                                class="text-muted small">({{ prod.short_name }})</span></label>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted small">Nenhum produto cadastrado.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end pt-3 border-top border-light">
+                            <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill fw-medium shadow-sm">
+                                <i class="bi bi-shield-lock me-1"></i> Salvar Restrições
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

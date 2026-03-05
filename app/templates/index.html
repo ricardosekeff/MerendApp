@@ -81,28 +81,13 @@
 
     <!-- Notas de Atualização -->
     <div class="col-lg-5">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">Mensagens do Sistema</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item px-0">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1 fw-bold">Ambiente Migrado</h6>
-                            <small class="text-muted">Hoje</small>
-                        </div>
-                        <p class="mb-1 small text-muted">A base de dados foi migrada para PostgreSQL com sucesso.</p>
-                    </div>
-                    <div class="list-group-item px-0">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1 fw-bold">Novo Usuário Admin</h6>
-                            <small class="text-muted">Ontem</small>
-                        </div>
-                        <p class="mb-1 small text-muted">Usuário admin@merendapp.com.br criado para o primeiro acesso.
-                        </p>
-                    </div>
-                </div>
+        <div class="card shadow-sm h-100 border-0 rounded-4">
+            <div class="card-body bg-light rounded-4 text-center p-4">
+                <i class="bi bi-wallet2 text-primary fs-1 mb-3"></i>
+                <h5 class="fw-bold">Minha Carteira</h5>
+                <p class="text-muted small">Gerencie limts, consulte saldos e emita extratos.</p>
+                <a href="{{ url_for('web.parent_wallet') }}" class="btn btn-primary rounded-pill px-4">Acessar
+                    Carteira</a>
             </div>
         </div>
     </div>

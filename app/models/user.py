@@ -30,6 +30,7 @@ class User(BaseModel, UserMixin):
 
     # Relacionamentos
     canteen: Mapped["Canteen"] = relationship("Canteen", back_populates="users")
+    wallet = relationship("Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def set_password(self, password):
         """Gera o hash da senha."""
