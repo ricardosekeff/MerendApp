@@ -59,7 +59,7 @@ stages:
     agent: qa
     dependencies: [implementation_loop]
     input: [REQUIREMENTS.md, docker-compose.yml, ${issue_number}]
-    instruction: "Run pytest suite inside the Docker environment. Evaluate PR_STATUS. If critical out-of-scope defects are found, isolate them by creating new bug issues via MCP."
+    instruction: "If requirements.txt or Dockerfile were modified, first ensure images are rebuilt (docker build). Then, run pytest suite inside the Docker environment. Evaluate PR_STATUS. If critical out-of-scope defects are found, isolate them by creating new bug issues via MCP."
 
   # Etapa 6: Consolidação e Deploy
   - id: merge_evaluation_and_pr
