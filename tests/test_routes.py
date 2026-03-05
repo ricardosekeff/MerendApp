@@ -16,8 +16,8 @@ def test_api_v1_health(client):
     assert data["status"] == "ok"
     assert data["service"] == "api"
 
-def test_root_redirect(client):
-    """Testa se a raiz (/) redireciona para o login."""
+def test_root_redirect_unauthorized(client):
+    """Testa se a raiz (/) redireciona para o login quando não autenticado."""
     response = client.get("/")
     assert response.status_code == 302
     assert "/login" in response.location

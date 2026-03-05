@@ -2,7 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
-from celery import Celery, Task
+from flask_login import LoginManager
+from celery import Celery
 
 # ── SQLAlchemy (ORM) ──────────────────────────────────────────────────
 db = SQLAlchemy()
@@ -16,9 +17,12 @@ jwt = JWTManager()
 # ── Flask-Marshmallow ────────────────────────────────────────────────
 ma = Marshmallow()
 
+# ── Flask-Login ──────────────────────────────────────────────────────
+login_manager = LoginManager()
+
 # ── Celery configuration ──────────────────────────────────────────────
 def celery_init_app(app) -> Celery:
-    class FlaskTask(Task):
+    class FlaskTask(Celery.Task): # Changed Task to Celery.Task
         def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)

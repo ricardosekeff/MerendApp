@@ -1,0 +1,33 @@
+name: "Interactive Sprint Planning & UX Validation"
+description: "Human-in-the-loop workflow to refine the backlog, validate UI concepts visually, and define the next Sprint scope."
+
+# Gatilho manual: a esteira só roda quando o professor/usuário decide planejar.
+trigger: "manual_start"
+interactive: true
+
+inputs:
+  - name: repo_owner
+    type: string
+  - name: repo_name
+    type: string
+
+stages:
+  # Fase 1: Triagem e Negociação do Escopo
+  - id: initial_triage
+    agent: scrum_master
+    input: [${repo_owner}, ${repo_name}]
+    instruction: "Fetch the open backlog. Propose a coherent set of issues for the next sprint based on technical dependencies. Dialog with the user to define the preliminary list. Do not proceed until the human explicitly confirms the selection."
+
+  # Fase 2: Validação Visual (Shift-Left Design)
+  - id: visual_validation
+    agent: ui_concept_designer
+    dependencies: [initial_triage]
+    instruction: "Review the preliminary list of issues defined in the previous stage. For every issue that involves UI modification or creation, draw ASCII wireframes and present them to the user for approval. Iterate on the drawings based on user feedback until all visual concepts are explicitly validated."
+
+  # Fase 3: Formalização e Transição de Estado
+  - id: sprint_commitment
+    agent: scrum_master
+    dependencies: [visual_validation]
+    instruction: "Now that the scope and visuals are approved by the user, ask for final confirmation to start the sprint. Upon explicit 'YES', use mcp.github.update_issue to label the selected issues as 'ready-for-dev'."
+
+final_output: "Scope defined, visual wireframes approved, and issues labeled to trigger the autonomous factory."

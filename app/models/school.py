@@ -11,7 +11,10 @@ class School(BaseModel):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     cnpj: Mapped[str] = mapped_column(String(18), unique=True, nullable=False, index=True)
+    phone: Mapped[str] = mapped_column(String(20), nullable=True)
     address: Mapped[str] = mapped_column(String(500), nullable=True)
+    city: Mapped[str] = mapped_column(String(100), nullable=True)
+    state: Mapped[str] = mapped_column(String(2), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relacionamentos
