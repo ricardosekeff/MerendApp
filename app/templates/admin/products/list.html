@@ -40,7 +40,7 @@
                                 <div class="fw-bold text-dark">{{ product.name }}</div>
                                 <small class="text-muted">{{ product.short_name }}</small>
                             </td>
-                            <td>{{ product.category_name }}</td>
+                            <td>{{ product.category.name if product.category else 'Sem Categoria' }}</td>
                             <td>
                                 <span
                                     class="badge {% if product.stock > 0 %}bg-primary{% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
