@@ -1,5 +1,5 @@
 from flask import g
-from flask_jwt_extended import get_jwt, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, verify_jwt_in_request, jwt_required
 from functools import wraps
 
 def get_current_tenant_id():
