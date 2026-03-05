@@ -11,7 +11,10 @@ class SchoolSchema(ma.SQLAlchemyAutoSchema):
 
     name = fields.String(required=True, validate=validate.Length(min=3, max=255))
     cnpj = fields.String(required=True, validate=validate.Length(min=14, max=18))
+    phone = fields.String(allow_none=True)
     address = fields.String(allow_none=True)
+    city = fields.String(allow_none=True)
+    state = fields.String(allow_none=True, validate=validate.Length(equal=2))
     active = fields.Boolean(load_default=True)
 
 class CanteenSchema(ma.SQLAlchemyAutoSchema):

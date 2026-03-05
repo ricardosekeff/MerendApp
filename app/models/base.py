@@ -32,9 +32,22 @@ class BaseModel(db.Model):
         onupdate=lambda: datetime.now(timezone.utc)
     )
 
-    def to_dict(self):
-        """Conversão básica para dicionário (debug/logs)."""
-        return {
-            c.name: getattr(self, c.name) 
-            for c in self.__table__.columns
-        }
+    @classmethod
+    def query_scoped(cls):
+        """
+        Retorna uma query já filtrada pelo canteen_id se aplicável.
+        Útil para o Middleware de Tenant da Sprint 2.
+        """
+        from flask import g
+        query = cls.query
+        
+        # Filtra se houver canteen_id no contexto de g e não for ADMIN_MASTER
+        if hasattr(g, 'canteen_id') and g.canteen_id and getattr(g, 'user_role', None) != 'ADMIN_MASTER':
+            # Verifica se o modelo tem o campo canteen_id
+            if hasattr(cls, 'canteen_id'):
+                return query.filter_by(canteen_id=g.canteen_id)
+        
+        return query
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {self.id}>"

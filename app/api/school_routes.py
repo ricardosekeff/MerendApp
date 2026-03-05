@@ -16,6 +16,7 @@ def get_schools():
     return jsonify(schools_schema.dump(schools)), 200
 
 @api_bp.route("/schools", methods=["POST"])
+@roles_required("ADMIN_MASTER")
 def create_school():
     """Cria uma nova escola."""
     data = request.get_json()
@@ -29,12 +30,14 @@ def create_school():
         return jsonify({"error": "Falha ao criar escola", "message": str(e)}), 400
 
 @api_bp.route("/schools/<uuid:school_id>", methods=["GET"])
+@roles_required("ADMIN_MASTER")
 def get_school(school_id):
     """Pega detalhes de uma escola específica."""
     school = School.query.get_or_404(school_id)
     return jsonify(school_schema.dump(school)), 200
 
 @api_bp.route("/schools/<uuid:school_id>", methods=["PUT"])
+@roles_required("ADMIN_MASTER")
 def update_school(school_id):
     """Atualiza dados de uma escola."""
     school = School.query.get_or_404(school_id)
@@ -48,6 +51,7 @@ def update_school(school_id):
         return jsonify({"error": "Falha ao atualizar escola", "message": str(e)}), 400
 
 @api_bp.route("/schools/<uuid:school_id>", methods=["DELETE"])
+@roles_required("ADMIN_MASTER")
 def delete_school(school_id):
     """Remove uma escola."""
     school = School.query.get_or_404(school_id)

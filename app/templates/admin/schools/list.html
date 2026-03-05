@@ -1,0 +1,105 @@
+{% extends "layouts/dashboard_layout.html" %}
+
+{% block title %}Escolas · MerendApp{% endblock %}
+{% block page_title %}Gestão de Escolas{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Escolas</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0">Lista de Escolas</h5>
+                <a href="{{ url_for('web.create_school') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Nova Escola
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Nome da Escola</th>
+                                <th>CNPJ</th>
+                                <th>Cidade/UF</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for school in schools %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ school.name }}</div>
+                                    <div class="text-muted small">{{ school.phone or 'Sem telefone' }}</div>
+                                </td>
+                                <td>{{ school.cnpj }}</td>
+                                <td>{{ school.city or '-' }}/{{ school.state or '-' }}</td>
+                                <td>
+                                    {% if school.active %}
+                                    <span class="badge bg-success-subtle text-success px-3">Ativa</span>
+                                    {% else %}
+                                    <span class="badge bg-danger-subtle text-danger px-3">Inativa</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('web.edit_school', school_id=school.id) }}"
+                                            class="btn btn-outline-secondary btn-sm" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ school.id.hex }}"
+                                            title="Desativar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ school.id.hex }}" tabindex="-1"
+                                        aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start">
+                                                    Tem certeza que deseja desativar a escola <strong>{{ school.name
+                                                        }}</strong>?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                    <form
+                                                        action="{{ url_for('web.delete_school', school_id=school.id) }}"
+                                                        method="POST" class="d-inline">
+                                                        <button type="submit" class="btn btn-danger">Confirmar
+                                                            Desativação</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-building fs-1 d-block mb-3"></i>
+                                    Nenhuma escola cadastrada ainda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

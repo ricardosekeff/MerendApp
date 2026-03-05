@@ -1,0 +1,79 @@
+{% extends "layouts/dashboard_layout.html" %}
+
+{% block title %}{{ 'Editar' if school else 'Nova' }} Escola · MerendApp{% endblock %}
+{% block page_title %}{{ 'Editar' if school else 'Cadastrar Nova' }} Escola{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('web.list_schools') }}">Escolas</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ 'Editar' if school else 'Novo' }}</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Dados da Instituição</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Nome da Escola</label>
+                            <input type="text" class="form-control" name="name"
+                                value="{{ school.name if school else '' }}" required
+                                placeholder="Ex: Escola Estadual Machado de Assis">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">CNPJ</label>
+                            <input type="text" class="form-control" name="cnpj"
+                                value="{{ school.cnpj if school else '' }}" required placeholder="00.000.000/0000-00">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Telefone</label>
+                            <input type="text" class="form-control" name="phone"
+                                value="{{ school.phone if school else '' }}" placeholder="(00) 0000-0000">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Endereço Completo</label>
+                            <input type="text" class="form-control" name="address"
+                                value="{{ school.address if school else '' }}" placeholder="Rua, Número, Bairro">
+                        </div>
+
+                        <div class="col-md-9">
+                            <label class="form-label fw-bold">Cidade</label>
+                            <input type="text" class="form-control" name="city"
+                                value="{{ school.city if school else '' }}" placeholder="Ex: São Paulo">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">UF</label>
+                            <input type="text" class="form-control" name="state"
+                                value="{{ school.state if school else '' }}" maxlength="2" placeholder="SP">
+                        </div>
+
+                        {% if school %}
+                        <div class="col-12 mt-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-config" type="checkbox" role="switch" id="activeSwitch"
+                                    name="active" {{ 'checked' if school.active else '' }}>
+                                <label class="form-check-label fw-bold" for="activeSwitch">Instituição Ativa</label>
+                            </div>
+                            <div class="form-text">Escolas inativas não permitem novas vendas ou cadastros de cantinas.
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-12 mt-5 border-top pt-4 text-end">
+                            <a href="{{ url_for('web.list_schools') }}" class="btn btn-light px-4 me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold">
+                                {{ 'Salvar Alterações' if school else 'Cadastrar Escola' }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+name: "Autonomous Flask/Postgres Factory"
+description: "Gitflow pipeline triggered by 'ready-for-dev' label, executing strict architectural constraints."
+
+# Gatilho baseado em evento externo (Webhook/Polling MCP)
+trigger: "github_issue_event"
+conditions:
+  action: "labeled"
+  label: "ready-for-dev"
+
+inputs:
+  - name: repo_owner
+    type: string
+  - name: repo_name
+    type: string
+  - name: issue_number
+    type: integer
+
+stages:
+  # Etapa 1: Engenharia de Requisitos
+  - id: issue_ingestion
+    agent: product_owner
+    input: [${repo_owner}, ${repo_name}, ${issue_number}]
+    instruction: "Fetch issue #${issue_number}. Generate REQUIREMENTS.md. Identify missing prerequisites or technical debt and spawn new issues if scope creeps, strictly isolating the current sprint."
+
+  # Etapa 2: Infraestrutura e Roteamento Gitflow
+  - id: architecture_gitflow
+    agent: architect
+    dependencies: [issue_ingestion]
+    input: [REQUIREMENTS.md]
+    instruction: "Apply Gitflow branching based on the issue label (feat, bug, hotfix). Generate ARCHITECTURE.md, Dockerfile, and docker-compose.yml enforcing the Flask Factory pattern and PostgreSQL."
+
+  # Etapa 3: Persistência de Dados
+  - id: database_layer
+    agent: db_manager
+    dependencies: [architecture_gitflow]
+    input: [ARCHITECTURE.md]
+    instruction: "Create init.sql scripts and ensure schema compatibility with the defined architecture."
+
+  # Etapa 4: Codificação Concorrente (Paralelismo)
+  - id: implementation_loop
+    parallel: true
+    dependencies: [database_layer]
+    tasks:
+      - agent: backend
+        input: [ARCHITECTURE.md, REQUIREMENTS.md]
+        instruction: "Implement API endpoints and Web Flask routes using SQLAlchemy and Marshmallow."
+      - agent: frontend
+        input: [ARCHITECTURE.md, REQUIREMENTS.md]
+        instruction: "Implement Jinja2 templates using Bootstrap 5, respecting the previously validated ASCII wireframes."
+
+  # Etapa 5: Validação de Código Contínua (Shift-Left Testing)
+  - id: ui_ux_audit
+    agent: ui_ux_auditor
+    dependencies: [implementation_loop]
+    input: [REQUIREMENTS.md, "app/templates/"]
+    instruction: "Perform static analysis on Jinja2/Bootstrap code. Check WCAG accessibility. Evaluate UI_STATUS."
+
+  - id: qa_testing_gate
+    agent: qa
+    dependencies: [implementation_loop]
+    input: [REQUIREMENTS.md, docker-compose.yml, ${issue_number}]
+    instruction: "Run pytest suite inside the Docker environment. Evaluate PR_STATUS. If critical out-of-scope defects are found, isolate them by creating new bug issues via MCP."
+
+  # Etapa 6: Consolidação e Deploy
+  - id: merge_evaluation_and_pr
+    agent: architect
+    dependencies: [ui_ux_audit, qa_testing_gate]
+    input: [UI_AUDIT.md, TEST_REPORT.md, ${repo_owner}, ${repo_name}, ${issue_number}]
+    instruction: "Act as Release Manager. If UI_STATUS and PR_STATUS are both APPROVED, create conventional commits, push the codebase, open a Pull Request via MCP linking to issue #${issue_number}, and close the issue."
+
+final_output: "Production-ready, tested, and UX-audited codebase encapsulated in a Gitflow Pull Request."

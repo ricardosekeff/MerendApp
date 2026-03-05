@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from config import config_by_env
-from app.extensions import db, migrate, jwt, ma, celery_init_app
+from app.extensions import db, migrate, jwt, ma, login_manager, celery_init_app
 
 def create_app(config_name=None):
     """
@@ -21,6 +21,18 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
     ma.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = "web.login"
+    login_manager.login_message_category = "info"
+    
+    from app.models.user import User
+    import uuid
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            return db.session.get(User, uuid.UUID(user_id))
+        except (ValueError, TypeError):
+            return None
     
     # Inicializa Celery (se configurado)
     celery_init_app(app)

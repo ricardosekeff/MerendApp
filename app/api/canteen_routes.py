@@ -3,11 +3,13 @@ from app.api import api_bp
 from app.extensions import db
 from app.models.canteen import Canteen
 from app.api.schemas import CanteenSchema
+from app.utils.tenant_utils import roles_required
 
 canteen_schema = CanteenSchema()
 canteens_schema = CanteenSchema(many=True)
 
 @api_bp.route("/canteens", methods=["GET"])
+@roles_required("ADMIN_MASTER")
 def get_canteens():
     """Retorna lista de todas as cantinas (acesso global para admin)."""
     # Na Sprint 1 ainda não filtramos por tenant no GET global de admin
@@ -15,6 +17,7 @@ def get_canteens():
     return jsonify(canteens_schema.dump(canteens)), 200
 
 @api_bp.route("/schools/<uuid:school_id>/canteens", methods=["POST"])
+@roles_required("ADMIN_MASTER")
 def create_canteen(school_id):
     """Cria uma nova cantina vinculada a uma escola."""
     data = request.get_json()
@@ -29,12 +32,14 @@ def create_canteen(school_id):
         return jsonify({"error": "Falha ao criar cantina", "message": str(e)}), 400
 
 @api_bp.route("/canteens/<uuid:canteen_id>", methods=["GET"])
+@roles_required("ADMIN_MASTER")
 def get_canteen(canteen_id):
     """Pega detalhes de uma cantina específica."""
     canteen = Canteen.query.get_or_404(canteen_id)
     return jsonify(canteen_schema.dump(canteen)), 200
 
 @api_bp.route("/canteens/<uuid:canteen_id>", methods=["PUT"])
+@roles_required("ADMIN_MASTER")
 def update_canteen(canteen_id):
     """Atualiza dados de uma cantina."""
     canteen = Canteen.query.get_or_404(canteen_id)
@@ -48,6 +53,7 @@ def update_canteen(canteen_id):
         return jsonify({"error": "Falha ao atualizar cantina", "message": str(e)}), 400
 
 @api_bp.route("/canteens/<uuid:canteen_id>", methods=["DELETE"])
+@roles_required("ADMIN_MASTER")
 def delete_canteen(canteen_id):
     """Remove uma cantina."""
     canteen = Canteen.query.get_or_404(canteen_id)

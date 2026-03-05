@@ -1,10 +1,13 @@
 import uuid
-from sqlalchemy import String, Boolean, ForeignKey, UUID
+from flask_login import UserMixin
+from sqlalchemy import String, Boolean, Enum, ForeignKey, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models.base import BaseModel
+from app.extensions import db
+import enum
 
-class User(BaseModel):
+class User(BaseModel, UserMixin):
     """
     Representa um Usuário do sistema.
     As roles definem o nível de acesso (RBAC).
