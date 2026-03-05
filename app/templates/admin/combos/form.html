@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}MerendApp - {{ 'Editar' if combo else 'Novo' }} Combo{% endblock %}
+
+{% block content %}
+<div class="container mt-4 max-w-lg mx-auto" style="max-width: 900px;">
+    <div class="d-flex align-items-center mb-4 gap-3">
+        <a href="{{ url_for('web.combos_list') }}"
+            class="btn btn-light border text-muted shadow-sm rounded-circle d-flex align-items-center justify-content-center"
+            style="width: 40px; height: 40px;">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-0">{{ 'Editar Combo' if combo else 'Novo Combo' }}</h1>
+            <p class="text-muted small mb-0">{{ 'Atualize as informações do combo' if combo else 'Preencha os dados do
+                novo combo' }}</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
+            <form id="comboForm">
+                <input type="hidden" id="comboId" value="{{ combo.id if combo else '' }}">
+                <input type="hidden" id="canteenId" value="{{ session.get('canteen_id') }}">
+
+                <!-- Dados Gerais -->
+                <h5 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Informações Básicas</h5>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label fw-medium text-secondary small">Código *</label>
+                        <input type="text" class="form-control" id="code" value="{{ combo.code if combo else '' }}"
+                            required placeholder="Ex: CMB-01">
+                    </div>
+
+                    <div class="col-md-9">
+                        <label class="form-label fw-medium text-secondary small">Nome Completo *</label>
+                        <input type="text" class="form-control" id="name" value="{{ combo.name if combo else '' }}"
+                            required placeholder="Ex: Combo Lanche Feliz">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary small">Nome Curto</label>
+                        <input type="text" class="form-control" id="short_name"
+                            value="{{ combo.short_name if combo else '' }}" placeholder="Ex: Lanche Feliz">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary small">URL Imagem (Opcional)</label>
+                        <input type="url" class="form-control" id="image_url"
+                            value="{{ combo.image_url if combo else '' }}" placeholder="https://...">
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 mb-4">
+
+                <!-- Precificação -->
+                <h5 class="fw-bold mb-3"><i class="bi bi-currency-dollar me-2"></i>Precificação</h5>
+                <div class="row g-3 mb-4 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-secondary small">Tipo de Preço</label>
+                        <select class="form-select" id="price_type">
+                            <option value="auto_sum" {% if combo and combo.price_type=='auto_sum' %}selected{% endif %}>
+                                Soma Automática dos Itens</option>
+                            <option value="custom" {% if combo and combo.price_type=='custom' %}selected{% endif %}>
+                                Preço Customizado (Fixo)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6" id="customPriceWrapper"
+                        style="display: {% if combo and combo.price_type == 'custom' %}block{% else %}none{% endif %};">
+                        <label class="form-label fw-medium text-secondary small">Preço Fixo do Combo (R$)</label>
+                        <input type="number" step="0.01" class="form-control border-warning bg-warning bg-opacity-10"
+                            id="custom_price" value="{{ combo.custom_price if combo and combo.custom_price else '' }}">
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 mb-4">
+
+                <!-- Itens -->
+                <h5 class="fw-bold mb-3"><i class="bi bi-box-seam me-2"></i>Itens do Combo</h5>
+                <div class="card bg-light border-0 mb-4">
+                    <div class="card-body">
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-medium text-secondary small">Produto</label>
+                                <select class="form-select" id="productSelect">
+                                    <option value="">-- Selecione --</option>
+                                    {% for p in products %}
+                                    {% if p.status %}
+                                    <option value="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.sell_price }}">
+                                        {{ p.name }} (R$ {{ "%.2f"|format(p.sell_price) }})</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-medium text-secondary small">Qtd.</label>
+                                <input type="number" class="form-control" id="productQty" value="1" min="1">
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button type="button" class="btn btn-secondary fw-bold" id="btnAddItem"><i
+                                        class="bi bi-plus-lg"></i> Add</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless align-middle" id="itemsTable">
+                                <thead class="border-bottom">
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th style="width: 100px;">Prec. Unt.</th>
+                                        <th style="width: 80px;">Qtd</th>
+                                        <th style="width: 100px;">Total</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Itens renderizados dinamicamente pelo JS -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold text-primary border-top">
+                                        <td colspan="3" class="text-end pt-2">SOMA TOTAL DOS ITENS:</td>
+                                        <td class="pt-2">R$ <span id="autoTotalSum">0.00</span></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4 form-check form-switch p-3 bg-light rounded-3 ms-0 d-flex align-items-center">
+                    <input class="form-check-input ms-0 me-3 mt-0 fs-5" type="checkbox" id="status" {% if not combo or
+                        combo.status %}checked{% endif %}>
+                    <label class="form-check-label fw-medium pt-1" for="status">
+                        Combo Ativo no Cardápio
+                        <span class="d-block small text-muted text-wrap mt-1">Quando desativado, não aparece no app do
+                            aluno nem nos PDVs.</span>
+                    </label>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-3 border-top">
+                    <a href="{{ url_for('web.combos_list') }}" class="btn btn-light px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" id="btnSave">
+                        <i class="bi bi-check2-circle me-1"></i> {{ 'Salvar Alterações' if combo else 'Criar Combo' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Load Initial Data -->
+<script>
+    const API_URL = '{{ url_for("web.combos_create") if not combo else url_for("web.combos_edit", combo_id=combo.id) }}';
+
+    // Configura itens da tela de edição (SSR -> Client State)
+    let comboItems = [];
+
+    {% if combo and combo.items %}
+    {% for item in combo.items %}
+    comboItems.push({
+        product_id: '{{ item.product.id }}',
+        name: '{{ item.product.name }}',
+        sell_price: {{ item.product.sell_price }},
+        quantity: {{ item.quantity }}
+            });
+    {% endfor %}
+    {% endif %}
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('comboForm');
+        const priceType = document.getElementById('price_type');
+        const customPriceWrapper = document.getElementById('customPriceWrapper');
+        const btnAddItem = document.getElementById('btnAddItem');
+        const tbody = document.querySelector('#itemsTable tbody');
+        const autoTotalSpan = document.getElementById('autoTotalSum');
+
+        // Toggle Custom Price Field
+        priceType.addEventListener('change', function () {
+            customPriceWrapper.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+
+        // Add Item via UI
+        btnAddItem.addEventListener('click', function () {
+            const select = document.getElementById('productSelect');
+            const qtyBox = document.getElementById('productQty');
+
+            if (!select.value || qtyBox.value < 1) return;
+
+            const opt = select.options[select.selectedIndex];
+
+            // Verifica se já existe, se sim soma
+            const existing = comboItems.find(i => i.product_id === select.value);
+            if (existing) {
+                existing.quantity += parseInt(qtyBox.value);
+            } else {
+                comboItems.push({
+                    product_id: select.value,
+                    name: opt.dataset.name,
+                    sell_price: parseFloat(opt.dataset.price),
+                    quantity: parseInt(qtyBox.value)
+                });
+            }
+
+            select.value = '';
+            qtyBox.value = 1;
+            renderItems();
+        });
+
+        // Remove Item via Event Delegation
+        tbody.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-rm-item');
+            if (!btn) return;
+            const pid = btn.dataset.pid;
+            comboItems = comboItems.filter(i => i.product_id !== pid);
+            renderItems();
+        });
+
+        function renderItems() {
+            tbody.innerHTML = '';
+            let sum = 0;
+
+            if (comboItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted small py-3">Adicione produtos acima.</td></tr>';
+            } else {
+                comboItems.forEach(item => {
+                    const rowTotal = item.sell_price * item.quantity;
+                    sum += rowTotal;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.name}</td>
+                        <td class="text-muted">R$ ${item.sell_price.toFixed(2)}</td>
+                        <td><span class="badge bg-secondary">${item.quantity}</span></td>
+                        <td class="fw-medium">R$ ${rowTotal.toFixed(2)}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-rm-item" data-pid="${item.product_id}">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            autoTotalSpan.textContent = sum.toFixed(2);
+        }
+
+        // POST/PUT to API
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (comboItems.length === 0) {
+                alert("O combo precisa ter pelo menos um produto.");
+                return;
+            }
+
+            const isEdit = document.getElementById('comboId').value !== '';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const payload = {
+                code: document.getElementById('code').value,
+                name: document.getElementById('name').value,
+                short_name: document.getElementById('short_name').value || null,
+                price_type: document.getElementById('price_type').value,
+                custom_price: document.getElementById('price_type').value === 'custom' ? parseFloat(document.getElementById('custom_price').value || 0) : null,
+                image_url: document.getElementById('image_url').value || null,
+                status: document.getElementById('status').checked,
+                canteen_id: document.getElementById('canteenId').value, // In future, API gets this from token
+                items: comboItems.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
+            };
+
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+
+            try {
+                const req = await fetch(API_URL, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (req.ok) {
+                    window.location.href = "{{ url_for('web.combos_list') }}";
+                } else {
+                    const errorData = await req.json();
+                    alert("Falha: " + (errorData.message || JSON.stringify(errorData.errors || "Erro desconhecido.")));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Salvar Alterações';
+                }
+            } catch (err) {
+                alert("Erro de conexão ao salvar.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Salvar Alterações';
+            }
+        });
+
+        // Initial render
+        renderItems();
+    });
+</script>
+{% endblock %}
