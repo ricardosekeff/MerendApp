@@ -91,7 +91,7 @@ class ProductPriceLogSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
 
-from app.models.wallet import Wallet, WalletLimit
+from app.models.wallet import Wallet, WalletLimit, WalletCategoryRestriction, WalletProductRestriction
 
 class WalletLimitSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -99,6 +99,18 @@ class WalletLimitSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
         
+class WalletCategoryRestrictionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletCategoryRestriction
+        include_fk = True
+        load_instance = True
+
+class WalletProductRestrictionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletProductRestriction
+        include_fk = True
+        load_instance = True
+
 class WalletSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Wallet
@@ -106,3 +118,5 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         
     limits = fields.List(fields.Nested(WalletLimitSchema), dump_only=True)
+    category_restrictions = fields.List(fields.Nested(WalletCategoryRestrictionSchema), dump_only=True)
+    product_restrictions = fields.List(fields.Nested(WalletProductRestrictionSchema), dump_only=True)

@@ -15,6 +15,8 @@ class Wallet(BaseModel):
 
     user = relationship("User", back_populates="wallet")
     limits = relationship("WalletLimit", back_populates="wallet", cascade="all, delete-orphan")
+    category_restrictions = relationship("WalletCategoryRestriction", backref="wallet", cascade="all, delete-orphan")
+    product_restrictions = relationship("WalletProductRestriction", backref="wallet", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Wallet {self.id} User:{self.user_id} Balance:{self.balance}>"
@@ -34,3 +36,24 @@ class WalletLimit(BaseModel):
 
     def __repr__(self):
         return f"<WalletLimit {self.id} Wallet:{self.wallet_id} {self.period_type}:{self.amount}>"
+
+
+class WalletCategoryRestriction(BaseModel):
+    """
+    Lista de categorias bloqueadas para consumo por esta carteira.
+    """
+    __tablename__ = "wallet_category_restrictions"
+
+    wallet_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("wallets.id"), nullable=False)
+    category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("categories.id"), nullable=False)
+
+
+class WalletProductRestriction(BaseModel):
+    """
+    Lista de produtos avulsos bloqueados para consumo por esta carteira.
+    """
+    __tablename__ = "wallet_product_restrictions"
+
+    wallet_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("wallets.id"), nullable=False)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
+

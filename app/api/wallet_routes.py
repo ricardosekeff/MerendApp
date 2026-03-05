@@ -3,9 +3,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.api import api_bp
-from app.models.wallet import Wallet, WalletLimit
+from app.models.wallet import Wallet, WalletLimit, WalletCategoryRestriction, WalletProductRestriction
 from app.models.user import User
-from app.api.schemas import WalletSchema, WalletLimitSchema
+from app.models.category import Category
+from app.models.product import Product
+from app.api.schemas import WalletSchema, WalletLimitSchema, WalletCategoryRestrictionSchema, WalletProductRestrictionSchema
 
 wallet_schema = WalletSchema()
 limit_schema = WalletLimitSchema(many=True)
@@ -80,6 +82,56 @@ def set_wallet_limits(wallet_id):
         db.session.refresh(wallet)
         return jsonify(wallet_schema.dump(wallet)), 200
 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500
+
+@api_bp.route("/wallets/<uuid:wallet_id>/restrictions/categories", methods=["POST"])
+@jwt_required()
+def set_wallet_category_restrictions(wallet_id):
+    """Atualiza a lista de categorias restritas da carteira."""
+    wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
+    data = request.get_json()
+
+    if not isinstance(data, list):
+        return jsonify({"message": "Expected a list of category UUIDs."}), 400
+
+    try:
+        WalletCategoryRestriction.query_scoped().filter_by(wallet_id=wallet.id).delete()
+        
+        for cat_id in data:
+            if Category.query_scoped().filter_by(id=cat_id).first():
+                new_restriction = WalletCategoryRestriction(wallet_id=wallet.id, category_id=cat_id)
+                db.session.add(new_restriction)
+                
+        db.session.commit()
+        db.session.refresh(wallet)
+        return jsonify(wallet_schema.dump(wallet)), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500
+
+@api_bp.route("/wallets/<uuid:wallet_id>/restrictions/products", methods=["POST"])
+@jwt_required()
+def set_wallet_product_restrictions(wallet_id):
+    """Atualiza a lista de produtos restritos da carteira."""
+    wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
+    data = request.get_json()
+
+    if not isinstance(data, list):
+        return jsonify({"message": "Expected a list of product UUIDs."}), 400
+
+    try:
+        WalletProductRestriction.query_scoped().filter_by(wallet_id=wallet.id).delete()
+        
+        for prod_id in data:
+            if Product.query_scoped().filter_by(id=prod_id).first():
+                new_restriction = WalletProductRestriction(wallet_id=wallet.id, product_id=prod_id)
+                db.session.add(new_restriction)
+                
+        db.session.commit()
+        db.session.refresh(wallet)
+        return jsonify(wallet_schema.dump(wallet)), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
