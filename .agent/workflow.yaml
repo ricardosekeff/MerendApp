@@ -66,6 +66,6 @@ stages:
     agent: architect
     dependencies: [ui_ux_audit, qa_testing_gate]
     input: [UI_AUDIT.md, TEST_REPORT.md, ${repo_owner}, ${repo_name}, ${issue_number}]
-    instruction: "Act as Release Manager. If UI_STATUS and PR_STATUS are both APPROVED, create conventional commits, push the codebase, open a Pull Request via MCP linking to issue #${issue_number}, and close the issue."
+    instruction: "Act as Release Manager. If UI_STATUS and PR_STATUS are both APPROVED, create conventional commits, push the codebase to the isolated feature branch. Pull Requests MUST NOT be opened per issue. Accumulate branch developments and open a single Pull Request only when all planned sprint issues are finalized. Merge into develop and only close the issue after the merge."
 
-final_output: "Production-ready, tested, and UX-audited codebase encapsulated in a Gitflow Pull Request."
+final_output: "Production-ready, tested, and UX-audited codebase encapsulated in isolated branches pending unified Pull Request."
