@@ -28,6 +28,6 @@ stages:
   - id: sprint_commitment
     agent: scrum_master
     dependencies: [visual_validation]
-    instruction: "Now that the scope and visuals are approved by the user, ask for final confirmation to start the sprint. Upon explicit 'YES', use mcp.github.update_issue to label the selected issues as 'ready-for-dev'."
+    instruction: "Now that the scope and visuals are approved by the user, ask for final confirmation to start the sprint. Upon explicit 'YES', use mcp.github.update_issue to label the selected issues with BOTH 'ready-for-dev' and the corresponding sprint tracking label (e.g. 'sprint-2')."
 
-final_output: "Scope defined, visual wireframes approved, and issues labeled to trigger the autonomous factory."
+final_output: "Scope defined, visual wireframes approved, and issues labeled (ready-for-dev, sprint-X) to trigger the autonomous factory."
