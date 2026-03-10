@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "layouts/dashboard_layout.html" %}
 
 {% block title %}MerendApp - {{ 'Editar' if category else 'Nova' }} Categoria{% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <div class="container mt-4 max-w-lg mx-auto" style="max-width: 800px;">
     <div class="d-flex align-items-center mb-4">
         <a href="{{ url_for('web.list_categories') }}"
