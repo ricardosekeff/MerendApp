@@ -15,6 +15,8 @@ class Wallet(BaseModel):
 
     user = relationship("User", back_populates="wallet")
     limits = relationship("WalletLimit", back_populates="wallet", cascade="all, delete-orphan")
+    category_restrictions = relationship("WalletCategoryRestriction", backref="wallet", cascade="all, delete-orphan")
+    product_restrictions = relationship("WalletProductRestriction", backref="wallet", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Wallet {self.id} User:{self.user_id} Balance:{self.balance}>"

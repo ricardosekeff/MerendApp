@@ -105,6 +105,18 @@ class WalletTransactionSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
         
+class WalletCategoryRestrictionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletCategoryRestriction
+        include_fk = True
+        load_instance = True
+
+class WalletProductRestrictionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletProductRestriction
+        include_fk = True
+        load_instance = True
+
 class WalletSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Wallet

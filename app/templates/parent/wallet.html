@@ -51,9 +51,9 @@
             </div>
         </div>
 
-        <!-- Configuração de Limites -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
+        <!-- Configuração de Limites e Restrições -->
+        <div class="col-lg-8 d-flex flex-column gap-4">
+            <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
                     <h5 class="fw-bold mb-0"><i class="bi bi-shield-check text-success me-2"></i>Controle de Limites
                     </h5>
@@ -158,6 +158,64 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Card de Restrições de Consumo -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-slash-circle text-danger me-2"></i>Restrições de Consumo
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Selecione as categorias ou produtos que deseja bloquear para
+                        esta carteira.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="{{ url_for('web.update_wallet_restrictions') }}">
+                        <div class="row g-4 mb-4">
+                            <!-- Categorias -->
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2">Por Categoria</h6>
+                                <div style="max-height: 250px; overflow-y: auto;" class="pe-2">
+                                    {% for cat in categories %}
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            name="restricted_categories" id="cat_{{ cat.id }}" value="{{ cat.id }}" {%
+                                            if cat.id in restricted_categories %}checked{% endif %}>
+                                        <label class="form-check-label" for="cat_{{ cat.id }}">{{ cat.name }}</label>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted small">Nenhuma categoria cadastrada.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Produtos -->
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2">Por Produto Específico</h6>
+                                <div style="max-height: 250px; overflow-y: auto;" class="pe-2">
+                                    {% for prod in products %}
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            name="restricted_products" id="prod_{{ prod.id }}" value="{{ prod.id }}" {%
+                                            if prod.id in restricted_products %}checked{% endif %}>
+                                        <label class="form-check-label" for="prod_{{ prod.id }}">{{ prod.name }} <span
+                                                class="text-muted small">({{ prod.short_name }})</span></label>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted small">Nenhum produto cadastrado.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end pt-3 border-top border-light">
+                            <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill fw-medium shadow-sm">
+                                <i class="bi bi-shield-lock me-1"></i> Salvar Restrições
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
     {% endif %}
