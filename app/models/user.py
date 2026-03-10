@@ -28,9 +28,19 @@ class User(BaseModel, UserMixin):
         nullable=True
     )
 
+    # Vínculo Parental: Um Responsável pode ter um Aluno (ou mais) associado.
+    parent_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
     # Relacionamentos
     canteen: Mapped["Canteen"] = relationship("Canteen", back_populates="users")
     wallet = relationship("Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    
+    parent: Mapped["User"] = relationship("User", remote_side="[User.id]", back_populates="children")
+    children: Mapped[list["User"]] = relationship("User", back_populates="parent")
 
     def set_password(self, password):
         """Gera o hash da senha."""

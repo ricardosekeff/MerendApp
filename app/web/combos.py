@@ -5,11 +5,13 @@ from app.extensions import db
 from app.models.combo import Combo, ComboItem
 from app.models.product import Product
 from sqlalchemy.exc import IntegrityError
+from app.utils.tenant_utils import roles_required
 import uuid
 
 
 @web_bp.route("/combos", methods=["GET"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def combos_list():
     combos = Combo.query.all()
     return render_template("admin/combos/list.html", combos=combos)
@@ -17,15 +19,16 @@ def combos_list():
 
 @web_bp.route("/combos/new", methods=["GET", "POST"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def combos_create():
     if request.method == "POST":
         data = request.get_json()
         items_data = data.pop("items", [])
         
         try:
-            # Pegamos o canteen_id do primeiro produto ou do usuário se for injetado
-            # Por enquanto, como é admin simplificado, vamos pegar de canteen_id se presente ou do primeiro produto
-            canteen_id = data.get("canteen_id")
+            # Pegamos o canteen_id do current_user primeiro.
+            # Fallback para o payload JSON e finalmente do primeiro produto
+            canteen_id = current_user.canteen_id or data.get("canteen_id")
             if not canteen_id and items_data:
                 p = db.session.get(Product, items_data[0]["product_id"])
                 canteen_id = p.canteen_id
@@ -65,6 +68,7 @@ def combos_create():
 
 @web_bp.route("/combos/<uuid:combo_id>/edit", methods=["GET", "PUT"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def combos_edit(combo_id):
     combo = db.session.get(Combo, combo_id)
     if not combo:
@@ -116,6 +120,7 @@ def combos_edit(combo_id):
 
 @web_bp.route("/combos/<uuid:combo_id>", methods=["DELETE"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def combos_delete(combo_id):
     combo = db.session.get(Combo, combo_id)
     if not combo:

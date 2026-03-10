@@ -1,15 +1,16 @@
-{% extends "base.html" %}
+{% extends "layouts/dashboard_layout.html" %}
 
 {% block title %}MerendApp - Carteira Digital{% endblock %}
 
-{% block content %}
-<div class="container mt-4 mb-5">
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('web.index') }}" class="btn btn-link text-decoration-none p-0 me-3 text-secondary">
-            <i class="bi bi-arrow-left fs-4"></i>
-        </a>
-        <div>
-            <h1 class="h3 fw-bold mb-0">Carteira Digital</h1>
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Carteira Digital</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid px-0">
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h1 class="h3 fw-bold">Carteira Digital</h1>
             <p class="text-muted mb-0">Gerencie o saldo e os limites do seu dependente</p>
         </div>
     </div>
@@ -27,14 +28,10 @@
         </form>
     </div>
     {% else %}
-    <div class="row g-4">
+    <div class="row g-4 {% if current_user.role == 'ALUNO' %}justify-content-center{% endif %}">
         <!-- Resumo do Saldo -->
-        <div class="col-lg-4">
-            <div
-                class="card border-0 shadow-sm rounded-4 text-white bg-primary h-100 position-relative overflow-hidden">
-                <div class="position-absolute end-0 top-0 opacity-10 m-3">
-                    <i class="bi bi-currency-dollar" style="font-size: 8rem;"></i>
-                </div>
+        <div class="{% if current_user.role == 'ALUNO' %}col-12 col-md-8 col-lg-6{% else %}col-lg-4{% endif %}">
+            <div class="card border-0 shadow-sm rounded-4 text-white bg-primary position-relative overflow-hidden mb-4">
                 <div class="card-body p-4 p-md-5 d-flex flex-column justify-content-between position-relative z-1">
                     <div>
                         <p class="text-white-50 mb-1 fw-medium text-uppercase ls-1" style="font-size: 0.85rem;">Saldo
@@ -43,12 +40,41 @@
                     </div>
 
                     <div class="mt-4 pt-3 border-top border-light border-opacity-25">
-                        <button class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm">
+                        {% if current_user.role == 'ALUNO' and not wallet.student_can_recharge %}
+                        <button type="button" class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm mb-2 opacity-50" style="cursor: not-allowed;" title="As recargas foram bloqueadas pelo seu Responsável.">
+                            <i class="bi bi-lock-fill me-2"></i> Recarga Bloqueada
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm mb-2" data-bs-toggle="modal" data-bs-target="#rechargeModal">
                             <i class="bi bi-plus-circle me-2"></i> Adicionar Saldo
                         </button>
+                        {% endif %}
+                        <a href="{{ url_for('web.wallet_statement') }}" class="btn btn-outline-light rounded-pill w-100 fw-bold">
+                            <i class="bi bi-receipt pb-1 me-2"></i> Ver Extrato Completo
+                        </a>
                     </div>
                 </div>
             </div>
+
+            <!-- Restrição de Recarga -->
+            {% if current_user.role == 'RESPONSAVEL' %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-gear text-secondary me-2"></i>Configurações</h6>
+                    <form method="POST" action="{{ url_for('web.update_recharge_permission_web') }}" id="rechargeForm">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <label class="form-check-label fw-medium mb-0" for="rechargeToggle">Recarga pelo Aluno</label>
+                                <p class="small text-muted mb-0">Permitir que o aluno gere Pix/Boleto.</p>
+                            </div>
+                            <div class="form-check form-switch fs-4">
+                                <input class="form-check-input" type="checkbox" role="switch" id="rechargeToggle" name="student_can_recharge" {% if wallet.student_can_recharge %}checked{% endif %} onchange="document.getElementById('rechargeForm').submit()">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Configuração de Limites e Restrições -->

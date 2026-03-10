@@ -4,10 +4,12 @@ from app.web import web_bp
 from app.extensions import db
 from app.models.category import Category
 from app.models.canteen import Canteen
+from app.utils.tenant_utils import roles_required
 
 
 @web_bp.route("/categories")
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def list_categories():
     categories = Category.query.all()
     return render_template("admin/categories/list.html", categories=categories)
@@ -15,6 +17,7 @@ def list_categories():
 
 @web_bp.route("/categories/new", methods=["GET", "POST"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def create_category():
     if request.method == "POST":
         try:
@@ -24,7 +27,7 @@ def create_category():
                 short_name=request.form.get("short_name"),
                 safety_stock=int(request.form.get("safety_stock", 0)),
                 status=request.form.get("status") == "on",
-                canteen_id=request.form.get("canteen_id")
+                canteen_id=current_user.canteen_id or request.form.get("canteen_id") or None
             )
             db.session.add(category)
             db.session.commit()
@@ -40,6 +43,7 @@ def create_category():
 
 @web_bp.route("/categories/<uuid:category_id>/edit", methods=["GET", "POST"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def edit_category(category_id):
     category = db.session.get(Category, category_id)
     if not category:
