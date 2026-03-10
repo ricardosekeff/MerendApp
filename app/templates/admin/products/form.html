@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "layouts/dashboard_layout.html" %}
 
 {% block title %}MerendApp - {{ 'Editar' if product else 'Novo' }} Produto{% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <div class="container mt-4 max-w-lg mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center mb-4">
         <a href="{{ url_for('web.list_products') }}" class="btn btn-link text-decoration-none p-0 me-3 text-secondary">
@@ -58,18 +58,16 @@
 
                     <div class="col-md-6">
                         <label for="cost_price" class="form-label fw-medium text-danger">Preço de Custo (R$)</label>
-                        <input type="number" step="0.01"
-                            class="form-control form-control-lg bg-light text-danger fw-bold" id="cost_price"
-                            name="cost_price" value="{{ product.cost_price if product else '0.00' }}" required>
+                        <input type="text" class="form-control form-control-lg bg-light text-danger fw-bold text-end" id="cost_price"
+                            name="cost_price" value="{{ "%.2f"|format(product.cost_price) if product else '' }}" required>
                         <div class="form-text">Usado para cálculo do Dashboard Financeiro.</div>
                     </div>
 
                     <div class="col-md-6">
                         <label for="sell_price" class="form-label fw-medium text-success">Preço de Venda Final
                             (R$)</label>
-                        <input type="number" step="0.01"
-                            class="form-control form-control-lg bg-light text-success fw-bold" id="sell_price"
-                            name="sell_price" value="{{ product.sell_price if product else '0.00' }}" required>
+                        <input type="text" class="form-control form-control-lg bg-light text-success fw-bold text-end" id="sell_price"
+                            name="sell_price" value="{{ "%.2f"|format(product.sell_price) if product else '' }}" required>
                         <div class="form-text">Quanto o aluno pagará por este produto.</div>
                     </div>
 
@@ -155,4 +153,49 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const costInput = document.getElementById("cost_price");
+        const sellInput = document.getElementById("sell_price");
+
+        function maskCurrency(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value === "") value = "0";
+            value = (parseInt(value, 10) / 100).toFixed(2);
+            value = value.replace(".", ",");
+            value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            e.target.value = value;
+        }
+
+        function unmaskCurrency(value) {
+            if (!value) return 0.0;
+            return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+        }
+
+        [costInput, sellInput].forEach(el => {
+            if (!el) return;
+            // Configurar valor inicial caso retornado pelo Flask:
+            if (el.value) {
+                let v = el.value.replace(/\D/g, '');
+                if (v !== "") {
+                    el.value = (parseInt(v, 10) / 100).toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+                }
+            }
+            // Bind listener global
+            el.addEventListener("input", maskCurrency);
+        });
+
+        // Interceptar o Form de Post do HTML padrão 
+        const form = document.querySelector("form");
+        form.addEventListener("submit", () => {
+            if (costInput && costInput.value) {
+                costInput.value = unmaskCurrency(costInput.value);
+            }
+            if (sellInput && sellInput.value) {
+                sellInput.value = unmaskCurrency(sellInput.value);
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -14,11 +14,24 @@
             class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
             <i class="bi bi-building me-2"></i>Escolas
         </a>
-        <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+        <a href="{{ url_for('web.list_canteens') }}" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
             <i class="bi bi-shop me-2"></i>Cantinas
         </a>
-        <a href="#" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+        <a href="{{ url_for('web.list_users') }}" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
             <i class="bi bi-people me-2"></i>Usuários
+        </a>
+        {% endif %}
+
+        {% if current_user.role in ['ADMIN_MASTER', 'GESTOR'] %}
+        <div class="text-uppercase small fw-bold mt-4 px-3 text-white-50">Cardápio</div>
+        <a href="{{ url_for('web.list_categories') }}" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+            <i class="bi bi-tags me-2"></i>Categorias
+        </a>
+        <a href="{{ url_for('web.list_products') }}" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+            <i class="bi bi-box-seam me-2"></i>Produtos
+        </a>
+        <a href="{{ url_for('web.combos_list') }}" class="list-group-item list-group-item-action bg-transparent second-text fw-bold">
+            <i class="bi bi-bag-plus me-2"></i>Combos
         </a>
         {% endif %}
 
