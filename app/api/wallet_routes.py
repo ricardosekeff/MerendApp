@@ -3,9 +3,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.api import api_bp
-from app.models.wallet import Wallet, WalletLimit
+from app.models.wallet import Wallet, WalletLimit, WalletCategoryRestriction, WalletProductRestriction
 from app.models.user import User
-from app.api.schemas import WalletSchema, WalletLimitSchema
+from app.models.category import Category
+from app.models.product import Product
+from app.api.schemas import WalletSchema, WalletLimitSchema, WalletCategoryRestrictionSchema, WalletProductRestrictionSchema
 
 wallet_schema = WalletSchema()
 limit_schema = WalletLimitSchema(many=True)

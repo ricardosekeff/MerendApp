@@ -13,6 +13,7 @@ def _empty_or_none(value):
     stripped = value.strip()
     return stripped if stripped else None
 
+
 @web_bp.route("/admin/schools")
 @login_required
 @roles_required("ADMIN_MASTER")
@@ -20,6 +21,7 @@ def list_schools():
     """Lista todas as escolas cadastradas."""
     schools = School.query.all()
     return render_template("admin/schools/list.html", schools=schools)
+
 
 @web_bp.route("/admin/schools/new", methods=["GET", "POST"])
 @login_required
@@ -33,11 +35,11 @@ def create_school():
         address = _empty_or_none(request.form.get("address"))
         city = _empty_or_none(request.form.get("city"))
         state = _empty_or_none(request.form.get("state"))
-        
+
         if not name or not cnpj:
             flash("Nome e CNPJ são obrigatórios.", "danger")
             return render_template("admin/schools/form.html", school=None)
-            
+
         try:
             school = School(
                 name=name,
@@ -54,8 +56,9 @@ def create_school():
         except Exception as e:
             db.session.rollback()
             flash(f"Erro ao criar escola: {str(e)}", "danger")
-            
+
     return render_template("admin/schools/form.html", school=None)
+
 
 @web_bp.route("/admin/schools/<uuid:school_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -63,7 +66,7 @@ def create_school():
 def edit_school(school_id):
     """Edita uma escola existente."""
     school = School.query.get_or_404(school_id)
-    
+
     if request.method == "POST":
         school.name = request.form.get("name")
         school.cnpj = request.form.get("cnpj")
@@ -72,7 +75,7 @@ def edit_school(school_id):
         school.city = _empty_or_none(request.form.get("city"))
         school.state = _empty_or_none(request.form.get("state"))
         school.active = "active" in request.form
-        
+
         try:
             db.session.commit()
             flash("Escola atualizada com sucesso!", "success")
@@ -80,8 +83,9 @@ def edit_school(school_id):
         except Exception as e:
             db.session.rollback()
             flash(f"Erro ao atualizar escola: {str(e)}", "danger")
-            
+
     return render_template("admin/schools/form.html", school=school)
+
 
 @web_bp.route("/admin/schools/<uuid:school_id>/delete", methods=["POST"])
 @login_required
@@ -90,7 +94,6 @@ def delete_school(school_id):
     """Remove (desativa) uma escola."""
     school = School.query.get_or_404(school_id)
     try:
-        # Soft delete ou hard delete? Issue #45 diz "remover (soft delete via is_active)"
         school.active = False
         db.session.commit()
         flash("Escola desativada com sucesso!", "success")
