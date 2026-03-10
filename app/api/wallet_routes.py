@@ -3,9 +3,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.api import api_bp
-from app.models.wallet import Wallet, WalletLimit
+from app.models.wallet import Wallet, WalletLimit, WalletCategoryRestriction, WalletProductRestriction
 from app.models.user import User
-from app.api.schemas import WalletSchema, WalletLimitSchema
+from app.models.category import Category
+from app.models.product import Product
+from app.api.schemas import WalletSchema, WalletLimitSchema, WalletCategoryRestrictionSchema, WalletProductRestrictionSchema
 
 wallet_schema = WalletSchema()
 limit_schema = WalletLimitSchema(many=True)
@@ -75,7 +77,6 @@ def set_wallet_limits(wallet_id):
                 db.session.add(new_limit)
 
         db.session.commit()
-        
         # Reload relation
         db.session.refresh(wallet)
         return jsonify(wallet_schema.dump(wallet)), 200
@@ -87,12 +88,12 @@ def set_wallet_limits(wallet_id):
 @api_bp.route("/wallets/<uuid:wallet_id>/recharge_permission", methods=["PUT"])
 @jwt_required()
 def update_recharge_permission(wallet_id):
-    """Ativa ou desativa a permissão do aluno fazer recargas autônomas."""
+    """Atualiza a permissão de recarga do estudante."""
     wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
     data = request.get_json()
-
+    
     if "student_can_recharge" not in data:
-        return jsonify({"message": "Campo 'student_can_recharge' obrigatorio."}), 400
+        return jsonify({"message": "Missing 'student_can_recharge' field"}), 400
 
     try:
         wallet.student_can_recharge = bool(data["student_can_recharge"])
@@ -101,3 +102,17 @@ def update_recharge_permission(wallet_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
+
+@api_bp.route("/wallets/<uuid:wallet_id>/transactions", methods=["GET"])
+@jwt_required()
+def get_wallet_transactions(wallet_id):
+    """Retorna o extrato de transações da carteira do usuário."""
+    wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
+    
+    # Busca transações ordenadas pela data de criação em ordem decrescente (mais recentes primeiro)
+    transactions = sorted(wallet.transactions, key=lambda t: t.created_at, reverse=True)
+    
+    # Criamos um schema focado na lista de transações
+    from app.api.schemas import WalletTransactionSchema
+    schema = WalletTransactionSchema(many=True)
+    return jsonify(schema.dump(transactions)), 200

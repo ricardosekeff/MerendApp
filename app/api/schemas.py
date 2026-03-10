@@ -91,14 +91,32 @@ class ProductPriceLogSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
 
-from app.models.wallet import Wallet, WalletLimit
+from app.models.wallet import Wallet, WalletLimit, WalletTransaction
 
 class WalletLimitSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = WalletLimit
         include_fk = True
         load_instance = True
+
+class WalletTransactionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletTransaction
+        include_fk = True
+        load_instance = True
         
+class WalletCategoryRestrictionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletCategoryRestriction
+        include_fk = True
+        load_instance = True
+
+class WalletProductRestrictionSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = WalletProductRestriction
+        include_fk = True
+        load_instance = True
+
 class WalletSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Wallet
@@ -107,3 +125,4 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         
     student_can_recharge = fields.Boolean(load_default=True)
     limits = fields.List(fields.Nested(WalletLimitSchema), dump_only=True)
+    transactions = fields.List(fields.Nested(WalletTransactionSchema), dump_only=True)
