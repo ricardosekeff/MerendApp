@@ -12,22 +12,37 @@ def parent_wallet():
     Exibe a carteira do usuário atual (Parente/Resp ou Aluno).
     Caso a carteira não exista, exibirá um botão/convite para criá-la.
     """
-    # Para simplificar na ISSUE-15, assumimos que o próprio current_user 
-    # visualiza sua carteira (na vida real o Parente veria a carteira do Filho dependente).
-    wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
-    
-    # Se tivéssemos a relação responsavel->aluno, buscaríamos a wallet do aluno aqui.
-    # Ex: student = User.query.filter_by(parent_id=current_user.id).first() -> wallet = student.wallet
+    # Se for PARENTE, pega a carteira do primeiro Filho. Se for ALUNO, pega a dele.
+    if current_user.role == "RESPONSAVEL":
+        student = User.query.filter_by(parent_id=current_user.id).first()
+        wallet = Wallet.query_scoped().filter_by(user_id=student.id).first() if student else None
+    else:
+        wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+        
+    recent_transactions = []
+    if wallet:
+        recent_transactions = sorted(wallet.transactions, key=lambda t: t.created_at, reverse=True)[:5]
 
-    return render_template("parent/wallet.html", wallet=wallet)
+    return render_template("parent/wallet.html", wallet=wallet, recent_transactions=recent_transactions)
 
 @web_bp.route("/wallet/create", methods=["POST"])
 @login_required
 def create_wallet_web():
     """Cria a carteira via requisição Web Frontend"""
-    existing_wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+    if current_user.role == "RESPONSAVEL":
+        # Se for parente, ele tentará criar para o primeiro filho.
+        student = User.query.filter_by(parent_id=current_user.id).first()
+        target_id = student.id if student else None
+    else:
+        target_id = current_user.id
+        
+    if not target_id:
+        flash("Nenhum usuário alvo encontrado para criar carteira.", "danger")
+        return redirect(url_for("web.parent_wallet"))
+        
+    existing_wallet = Wallet.query_scoped().filter_by(user_id=target_id).first()
     if not existing_wallet:
-        new_wallet = Wallet(user_id=current_user.id, balance=0.00, active=True)
+        new_wallet = Wallet(user_id=target_id, balance=0.00, active=True)
         db.session.add(new_wallet)
         db.session.commit()
         flash("Carteira criada com sucesso!", "success")
@@ -40,7 +55,12 @@ def create_wallet_web():
 @login_required
 def update_wallet_limits():
     """Atualiza limites diário, semanal e mensal via formulário HTML"""
-    wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+    if current_user.role == "RESPONSAVEL":
+        student = User.query.filter_by(parent_id=current_user.id).first()
+        wallet = Wallet.query_scoped().filter_by(user_id=student.id).first() if student else None
+    else:
+        wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+        
     if not wallet:
         flash("Carteira não encontrada.", "danger")
         return redirect(url_for("web.parent_wallet"))
@@ -67,7 +87,12 @@ def update_wallet_limits():
 @login_required
 def update_recharge_permission_web():
     """Toggle web da permissão de recarregar a carteira via html"""
-    wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+    if current_user.role == "RESPONSAVEL":
+        student = User.query.filter_by(parent_id=current_user.id).first()
+        wallet = Wallet.query_scoped().filter_by(user_id=student.id).first() if student else None
+    else:
+        wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+        
     if not wallet:
         flash("Carteira não encontrada.", "danger")
         return redirect(url_for("web.parent_wallet"))
@@ -86,7 +111,11 @@ def update_recharge_permission_web():
 @login_required
 def wallet_statement():
     """Visualização Web do Extrato de Transações Financeiras (Parent's View)"""
-    wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+    if current_user.role == "RESPONSAVEL":
+        student = User.query.filter_by(parent_id=current_user.id).first()
+        wallet = Wallet.query_scoped().filter_by(user_id=student.id).first() if student else None
+    else:
+        wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
     
     if not wallet:
         flash("Nenhuma carteira digital encontrada para sua conta.", "warning")
@@ -95,3 +124,49 @@ def wallet_statement():
     transactions = sorted(wallet.transactions, key=lambda t: t.created_at, reverse=True)
     
     return render_template("parent/wallet_statement.html", wallet=wallet, transactions=transactions)
+
+@web_bp.route("/wallet/recharge", methods=["POST"])
+@login_required
+def recharge_wallet_web():
+    """Adiciona saldo à carteira do aluno simulando Pix/Cartão"""
+    from decimal import Decimal
+    
+    amount_str = request.form.get("amount", "0")
+    try:
+        amount = Decimal(amount_str)
+    except Exception:
+        amount = Decimal('0.0')
+        
+    if amount <= 0:
+        flash("Valor inválido para recarga.", "danger")
+        return redirect(url_for("web.parent_wallet"))
+        
+    if current_user.role == "RESPONSAVEL":
+        student = User.query.filter_by(parent_id=current_user.id).first()
+        wallet = Wallet.query_scoped().filter_by(user_id=student.id).first() if student else None
+    else:
+        wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+        # Se for aluno, verificar se ele tem permissão ativa do Parente
+        if wallet and not wallet.student_can_recharge:
+            flash("Sua recarga foi bloqueada pelo Responsável. Solicite a liberação no aplicativo.", "danger")
+            return redirect(url_for("web.parent_wallet"))
+            
+    if not wallet:
+        flash("Carteira não encontrada.", "danger")
+        return redirect(url_for("web.parent_wallet"))
+
+    wallet.balance += amount
+    
+    # Gerando Comprovante de Transação
+    from app.models.wallet import WalletTransaction
+    tx = WalletTransaction(
+        wallet_id=wallet.id,
+        amount=amount,
+        transaction_type="credit",
+        description="Recarga via PIX/Cartão"
+    )
+    db.session.add(tx)
+    db.session.commit()
+    
+    flash(f"Recarga de R$ {amount:.2f} realizada com sucesso!", "success")
+    return redirect(url_for("web.parent_wallet"))

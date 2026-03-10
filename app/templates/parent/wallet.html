@@ -1,15 +1,16 @@
-{% extends "base.html" %}
+{% extends "layouts/dashboard_layout.html" %}
 
 {% block title %}MerendApp - Carteira Digital{% endblock %}
 
-{% block content %}
-<div class="container mt-4 mb-5">
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ url_for('web.index') }}" class="btn btn-link text-decoration-none p-0 me-3 text-secondary">
-            <i class="bi bi-arrow-left fs-4"></i>
-        </a>
-        <div>
-            <h1 class="h3 fw-bold mb-0">Carteira Digital</h1>
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Carteira Digital</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid px-0">
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h1 class="h3 fw-bold">Carteira Digital</h1>
             <p class="text-muted mb-0">Gerencie o saldo e os limites do seu dependente</p>
         </div>
     </div>
@@ -27,14 +28,10 @@
         </form>
     </div>
     {% else %}
-    <div class="row g-4">
+    <div class="row g-4 {% if current_user.role == 'ALUNO' %}justify-content-center{% endif %}">
         <!-- Resumo do Saldo -->
-        <div class="col-lg-4">
-            <div
-                class="card border-0 shadow-sm rounded-4 text-white bg-primary h-100 position-relative overflow-hidden">
-                <div class="position-absolute end-0 top-0 opacity-10 m-3">
-                    <i class="bi bi-currency-dollar" style="font-size: 8rem;"></i>
-                </div>
+        <div class="{% if current_user.role == 'ALUNO' %}col-12 col-md-8 col-lg-6{% else %}col-lg-4{% endif %}">
+            <div class="card border-0 shadow-sm rounded-4 text-white bg-primary position-relative overflow-hidden mb-4">
                 <div class="card-body p-4 p-md-5 d-flex flex-column justify-content-between position-relative z-1">
                     <div>
                         <p class="text-white-50 mb-1 fw-medium text-uppercase ls-1" style="font-size: 0.85rem;">Saldo
@@ -43,15 +40,45 @@
                     </div>
 
                     <div class="mt-4 pt-3 border-top border-light border-opacity-25">
-                        <button class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm">
+                        {% if current_user.role == 'ALUNO' and not wallet.student_can_recharge %}
+                        <button type="button" class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm mb-2 opacity-50" style="cursor: not-allowed;" title="As recargas foram bloqueadas pelo seu Responsável.">
+                            <i class="bi bi-lock-fill me-2"></i> Recarga Bloqueada
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-light text-primary rounded-pill w-100 fw-bold shadow-sm mb-2" data-bs-toggle="modal" data-bs-target="#rechargeModal">
                             <i class="bi bi-plus-circle me-2"></i> Adicionar Saldo
                         </button>
+                        {% endif %}
+                        <a href="{{ url_for('web.wallet_statement') }}" class="btn btn-outline-light rounded-pill w-100 fw-bold">
+                            <i class="bi bi-receipt pb-1 me-2"></i> Ver Extrato Completo
+                        </a>
                     </div>
                 </div>
             </div>
+
+            <!-- Restrição de Recarga -->
+            {% if current_user.role == 'RESPONSAVEL' %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-gear text-secondary me-2"></i>Configurações</h6>
+                    <form method="POST" action="{{ url_for('web.update_recharge_permission_web') }}" id="rechargeForm">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <label class="form-check-label fw-medium mb-0" for="rechargeToggle">Recarga pelo Aluno</label>
+                                <p class="small text-muted mb-0">Permitir que o aluno gere Pix/Boleto.</p>
+                            </div>
+                            <div class="form-check form-switch fs-4">
+                                <input class="form-check-input" type="checkbox" role="switch" id="rechargeToggle" name="student_can_recharge" {% if wallet.student_can_recharge %}checked{% endif %} onchange="document.getElementById('rechargeForm').submit()">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Configuração de Limites -->
+        {% if current_user.role == 'RESPONSAVEL' %}
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
@@ -159,7 +186,86 @@
                 </div>
             </div>
         </div>
+        {% elif current_user.role == 'ALUNO' %}
+        <!-- Últimas Transações (Apenas Aluno) -->
+        <div class="col-12 col-md-10 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 px-md-5 pb-0">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Últimas Movimentações</h5>
+                    <p class="text-muted small mb-0 mt-1">Seu histórico recente de recargas e consumo na cantina.</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    {% if recent_transactions %}
+                    <div class="list-group list-group-flush">
+                        {% for tx in recent_transactions %}
+                        <div class="list-group-item px-0 py-3 border-light {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    {% if tx.transaction_type == 'credit' %}
+                                    <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3">
+                                        <i class="bi bi-arrow-down-left fs-5"></i>
+                                    </div>
+                                    {% else %}
+                                    <div class="bg-danger bg-opacity-10 text-danger rounded p-2 me-3">
+                                        <i class="bi bi-arrow-up-right fs-5"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">{{ tx.description or 'Movimentação' }}</h6>
+                                        <small class="text-muted" style="font-size: 0.8rem;">{{ tx.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    {% if tx.transaction_type == 'credit' %}
+                                    <h6 class="fw-bold text-success mb-0" style="font-size: 0.95rem;">+ R$ {{ "%.2f"|format(tx.amount) }}</h6>
+                                    {% else %}
+                                    <h6 class="fw-bold text-danger mb-0" style="font-size: 0.95rem;">- R$ {{ "%.2f"|format(tx.amount) }}</h6>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center p-4 text-muted mt-3">
+                        <i class="bi bi-receipt text-secondary opacity-50 mb-3" style="font-size: 2.5rem;"></i>
+                        <h6>Nenhuma movimentação</h6>
+                        <p class="small mb-0">Você ainda não possui registros na carteira.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 </div>
+
+{% if current_user.role != 'ALUNO' or wallet.student_can_recharge %}
+<!-- Modal de Recarga -->
+<div class="modal fade" id="rechargeModal" tabindex="-1" aria-labelledby="rechargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="rechargeModalLabel"><i class="bi bi-currency-dollar text-primary me-2"></i>Adicionar Saldo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('web.recharge_wallet_web') }}">
+                <div class="modal-body pt-3 pb-4 px-4">
+                    <p class="text-muted small mb-4">Insira o valor que deseja adicionar na Carteira Digital. O valor será creditado instantaneamente na conta.</p>
+                    
+                    <div class="input-group input-group-lg mb-3 shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-light border-0 px-4 text-secondary fw-bold">R$</span>
+                        <input type="number" step="0.01" min="1" class="form-control border-0 bg-light fw-bold" id="rechargeAmount" name="amount" placeholder="50,00" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Sair</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm"><i class="bi bi-check2-circle me-2"></i>Concluir Pagamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

@@ -12,6 +12,7 @@ class Wallet(BaseModel):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), unique=True, nullable=False)
     balance: Mapped[float] = mapped_column(Numeric(10, 2), default=0.00, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    student_can_recharge: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     user = relationship("User", back_populates="wallet")
     limits = relationship("WalletLimit", back_populates="wallet", cascade="all, delete-orphan")

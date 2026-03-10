@@ -1,108 +1,78 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/dashboard_layout.html" %}
 
-{% block title %}Extrato da Carteira - MerendaApp{% endblock %}
+{% block title %}MerendApp - Extrato da Carteira{% endblock %}
 
-{% block content %}
-<div class="container py-5">
-    <!-- Header -->
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('web.parent_wallet') }}">Carteira Digital</a></li>
+<li class="breadcrumb-item active" aria-current="page">Extrato Consolidado</li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid px-0">
     <div class="row align-items-center mb-4">
-        <div class="col-md-6 mb-3 mb-md-0">
-            <h2 class="fw-bold mb-1 text-dark">
-                <i class="bi bi-receipt me-2 text-primary"></i>Extrato de Transações
-            </h2>
-            <p class="text-muted mb-0">Histórico de Movimentações da Carteira</p>
-        </div>
-        <div class="col-md-6 text-md-end">
-            <a href="{{ url_for('web.parent_wallet') }}" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-medium shadow-sm">
-                <i class="bi bi-arrow-left me-1"></i> Voltar à Carteira
-            </a>
+        <div class="col">
+            <h1 class="h3 fw-bold">Extrato Consolidado</h1>
+            <p class="text-muted mb-0">Confira o histórico de recargas e consumo na cantina</p>
         </div>
     </div>
 
-    <!-- Balance Summary -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card shadow-sm border-0 bg-primary text-white rounded-4 overflow-hidden">
-                <div class="card-body p-5 position-relative">
-                    <!-- Overlay decorative element -->
-                    <div class="position-absolute opacity-25" style="top: -20px; right: -20px; font-size: 8rem;">
-                        <i class="bi bi-wallet2"></i>
+    <!-- Saldo Atual Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center">
+            <div>
+                <p class="text-muted mb-0 fw-medium text-uppercase" style="font-size: 0.85rem;">Saldo Disponível</p>
+                <h3 class="fw-bold text-primary mb-0">R$ {{ "%.2f"|format(wallet.balance) }}</h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 d-inline-flex align-items-center justify-content-center">
+                <i class="bi bi-wallet2 fs-4"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Transações -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            {% if transactions %}
+            <div class="list-group list-group-flush rounded-4">
+                {% for tx in transactions %}
+                <div class="list-group-item p-4 border-light {% if not loop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            {% if tx.transaction_type == 'credit' %}
+                            <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3">
+                                <i class="bi bi-arrow-down-left fs-5"></i>
+                            </div>
+                            {% else %}
+                            <div class="bg-danger bg-opacity-10 text-danger rounded p-2 me-3">
+                                <i class="bi bi-arrow-up-right fs-5"></i>
+                            </div>
+                            {% endif %}
+                            
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ tx.description or 'Movimentação via Carteira' }}</h6>
+                                <small class="text-muted">{{ tx.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if tx.transaction_type == 'credit' %}
+                            <h6 class="fw-bold text-success mb-0">+ R$ {{ "%.2f"|format(tx.amount) }}</h6>
+                            <small class="text-success opacity-75">Recarga / Estorno</small>
+                            {% else %}
+                            <h6 class="fw-bold text-danger mb-0">- R$ {{ "%.2f"|format(tx.amount) }}</h6>
+                            <small class="text-danger opacity-75">Consumo Diário</small>
+                            {% endif %}
+                        </div>
                     </div>
-                    
-                    <h5 class="fw-medium mb-3 opacity-75">Saldo Atual</h5>
-                    <h1 class="display-3 fw-bold mb-0">R$ {{ "%.2f"|format(wallet.balance) }}</h1>
                 </div>
+                {% endfor %}
             </div>
-        </div>
-    </div>
-
-    <!-- Timeline / Transactions List -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4 p-md-5">
-                    
-                    {% if transactions %}
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light text-uppercase small text-muted">
-                                    <tr>
-                                        <th scope="col" class="py-3 px-4 rounded-start-2">Data/Hora</th>
-                                        <th scope="col" class="py-3 px-4">Descrição</th>
-                                        <th scope="col" class="py-3 px-4">Tipo</th>
-                                        <th scope="col" class="py-3 px-4 text-end rounded-end-2">Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for transaction in transactions %}
-                                    <tr>
-                                        <td class="px-4 py-3">
-                                            <div class="d-flex align-items-center">
-                                                <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 48px; height: 48px; line-height: 32px;">
-                                                    {% if transaction.transaction_type == 'credit' %}
-                                                        <i class="bi bi-arrow-down-left text-success fs-5"></i>
-                                                    {% else %}
-                                                        <i class="bi bi-arrow-up-right text-danger fs-5"></i>
-                                                    {% endif %}
-                                                </div>
-                                                <div>
-                                                    <span class="d-block fw-bold text-dark">{{ transaction.created_at.strftime('%d/%m/%Y') }}</span>
-                                                    <small class="text-muted">{{ transaction.created_at.strftime('%H:%M') }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span class="fw-medium text-dark">{{ transaction.description or 'Transação Genérica' }}</span>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            {% if transaction.transaction_type == 'credit' %}
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-medium">Crédito</span>
-                                            {% else %}
-                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-medium">Débito</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="px-4 py-3 text-end">
-                                            {% if transaction.transaction_type == 'credit' %}
-                                                <span class="fw-bold text-success">+ R$ {{ "%.2f"|format(transaction.amount) }}</span>
-                                            {% else %}
-                                                <span class="fw-bold text-danger">- R$ {{ "%.2f"|format(transaction.amount) }}</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-receipt text-muted opacity-50" style="font-size: 5rem;"></i>
-                            <h4 class="mt-4 fw-bold text-dark">Nenhuma transação encontrada</h4>
-                            <p class="text-muted">As movimentações de saldo aparecerão aqui.</p>
-                        </div>
-                    {% endif %}
-
-                </div>
+            {% else %}
+            <div class="text-center p-5 text-muted">
+                <i class="bi bi-receipt text-secondary opacity-50 mb-3" style="font-size: 3rem;"></i>
+                <h5>Nenhuma movimentação ainda</h5>
+                <p>O extrato da carteira está vazio. Assim que houver recargas ou compras, elas aparecerão aqui.</p>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

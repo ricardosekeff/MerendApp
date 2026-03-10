@@ -6,10 +6,12 @@ from app.models.product import Product
 from app.models.category import Category
 from app.models.canteen import Canteen
 from app.models.product_price_log import ProductPriceLog
+from app.utils.tenant_utils import roles_required
 
 
 @web_bp.route("/products")
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def list_products():
     products = Product.query.all()
     return render_template("admin/products/list.html", products=products)
@@ -17,6 +19,7 @@ def list_products():
 
 @web_bp.route("/products/new", methods=["GET", "POST"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def create_product():
     if request.method == "POST":
         try:
@@ -28,8 +31,8 @@ def create_product():
                 cost_price=float(request.form.get("cost_price", 0.0)),
                 sell_price=float(request.form.get("sell_price", 0.0)),
                 status=request.form.get("status") == "on",
-                category_id=request.form.get("category_id"),
-                canteen_id=request.form.get("canteen_id")
+                category_id=request.form.get("category_id") or None,
+                canteen_id=current_user.canteen_id or request.form.get("canteen_id") or None
             )
             db.session.add(product)
             db.session.commit()
@@ -46,6 +49,7 @@ def create_product():
 
 @web_bp.route("/products/<uuid:product_id>/edit", methods=["GET", "POST"])
 @login_required
+@roles_required("ADMIN_MASTER", "GESTOR", "FINANCEIRO")
 def edit_product(product_id):
     product = db.session.get(Product, product_id)
     if not product:
@@ -75,7 +79,7 @@ def edit_product(product_id):
 
             product.cost_price = new_cost
             product.sell_price = new_sell
-            product.category_id = request.form.get("category_id")
+            product.category_id = request.form.get("category_id") or None
             product.status = request.form.get("status") == "on"
             db.session.commit()
             flash("Produto atualizado com sucesso!", "success")
