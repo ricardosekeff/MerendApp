@@ -37,23 +37,18 @@ class WalletLimit(BaseModel):
     def __repr__(self):
         return f"<WalletLimit {self.id} Wallet:{self.wallet_id} {self.period_type}:{self.amount}>"
 
-
-class WalletCategoryRestriction(BaseModel):
+class WalletTransaction(BaseModel):
     """
-    Lista de categorias bloqueadas para consumo por esta carteira.
+    Log temporal de entradas e saídas financeiras na carteira (Extrato).
     """
-    __tablename__ = "wallet_category_restrictions"
+    __tablename__ = "wallet_transactions"
 
     wallet_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("wallets.id"), nullable=False)
-    category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("categories.id"), nullable=False)
+    transaction_type: Mapped[str] = mapped_column(String(50), nullable=False) # credit or debit
+    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    description: Mapped[str] = mapped_column(String(255), nullable=True)
 
+    wallet = relationship("Wallet", backref="transactions")
 
-class WalletProductRestriction(BaseModel):
-    """
-    Lista de produtos avulsos bloqueados para consumo por esta carteira.
-    """
-    __tablename__ = "wallet_product_restrictions"
-
-    wallet_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("wallets.id"), nullable=False)
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
-
+    def __repr__(self):
+        return f"<WalletTransaction {self.id} Wallet:{self.wallet_id} {self.transaction_type}:{self.amount}>"

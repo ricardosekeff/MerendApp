@@ -82,35 +82,35 @@ def update_wallet_limits():
     flash("Limites de gastos atualizados com sucesso!", "success")
     return redirect(url_for("web.parent_wallet"))
 
-@web_bp.route("/wallet/restrictions", methods=["POST"])
+@web_bp.route("/wallet/recharge_permission", methods=["POST"])
 @login_required
-def update_wallet_restrictions():
-    """Atualiza as listas de restrição (categorias/produtos) via HTML."""
+def update_recharge_permission_web():
+    """Toggle web da permissão de recarregar a carteira via html"""
     wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
     if not wallet:
         flash("Carteira não encontrada.", "danger")
         return redirect(url_for("web.parent_wallet"))
 
-    category_ids = request.form.getlist("restricted_categories")
-    product_ids = request.form.getlist("restricted_products")
+    # Verifica se o checkbox 'student_can_recharge' veia no payload (como on/off/true)
+    student_can_recharge = request.form.get("student_can_recharge") == "on"
 
-    # Deletar antigas
-    WalletCategoryRestriction.query_scoped().filter_by(wallet_id=wallet.id).delete()
-    WalletProductRestriction.query_scoped().filter_by(wallet_id=wallet.id).delete()
-
-    import uuid
-    for cid in category_ids:
-        try:
-            db.session.add(WalletCategoryRestriction(wallet_id=wallet.id, category_id=uuid.UUID(cid)))
-        except ValueError:
-            pass
-            
-    for pid in product_ids:
-        try:
-            db.session.add(WalletProductRestriction(wallet_id=wallet.id, product_id=uuid.UUID(pid)))
-        except ValueError:
-            pass
-
+    wallet.student_can_recharge = student_can_recharge
     db.session.commit()
-    flash("Restrições de consumo atualizadas com sucesso!", "success")
+    
+    status_msg = "Permitir" if student_can_recharge else "Bloquear"
+    flash(f"Configuração '{status_msg} aluno recarregar' salva com sucesso!", "success")
     return redirect(url_for("web.parent_wallet"))
+
+@web_bp.route("/wallet/statement", methods=["GET"])
+@login_required
+def wallet_statement():
+    """Visualização Web do Extrato de Transações Financeiras (Parent's View)"""
+    wallet = Wallet.query_scoped().filter_by(user_id=current_user.id).first()
+    
+    if not wallet:
+        flash("Nenhuma carteira digital encontrada para sua conta.", "warning")
+        return redirect(url_for("web.index"))
+        
+    transactions = sorted(wallet.transactions, key=lambda t: t.created_at, reverse=True)
+    
+    return render_template("parent/wallet_statement.html", wallet=wallet, transactions=transactions)

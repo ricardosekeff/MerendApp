@@ -77,7 +77,6 @@ def set_wallet_limits(wallet_id):
                 db.session.add(new_limit)
 
         db.session.commit()
-        
         # Reload relation
         db.session.refresh(wallet)
         return jsonify(wallet_schema.dump(wallet)), 200
@@ -86,52 +85,34 @@ def set_wallet_limits(wallet_id):
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
 
-@api_bp.route("/wallets/<uuid:wallet_id>/restrictions/categories", methods=["POST"])
+@api_bp.route("/wallets/<uuid:wallet_id>/recharge_permission", methods=["PUT"])
 @jwt_required()
-def set_wallet_category_restrictions(wallet_id):
-    """Atualiza a lista de categorias restritas da carteira."""
+def update_recharge_permission(wallet_id):
+    """Atualiza a permissão de recarga do estudante."""
     wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
     data = request.get_json()
-
-    if not isinstance(data, list):
-        return jsonify({"message": "Expected a list of category UUIDs."}), 400
+    
+    if "student_can_recharge" not in data:
+        return jsonify({"message": "Missing 'student_can_recharge' field"}), 400
 
     try:
-        WalletCategoryRestriction.query_scoped().filter_by(wallet_id=wallet.id).delete()
-        
-        for cat_id in data:
-            if Category.query_scoped().filter_by(id=cat_id).first():
-                new_restriction = WalletCategoryRestriction(wallet_id=wallet.id, category_id=cat_id)
-                db.session.add(new_restriction)
-                
+        wallet.student_can_recharge = bool(data["student_can_recharge"])
         db.session.commit()
-        db.session.refresh(wallet)
         return jsonify(wallet_schema.dump(wallet)), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
 
-@api_bp.route("/wallets/<uuid:wallet_id>/restrictions/products", methods=["POST"])
+@api_bp.route("/wallets/<uuid:wallet_id>/transactions", methods=["GET"])
 @jwt_required()
-def set_wallet_product_restrictions(wallet_id):
-    """Atualiza a lista de produtos restritos da carteira."""
+def get_wallet_transactions(wallet_id):
+    """Retorna o extrato de transações da carteira do usuário."""
     wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
-    data = request.get_json()
-
-    if not isinstance(data, list):
-        return jsonify({"message": "Expected a list of product UUIDs."}), 400
-
-    try:
-        WalletProductRestriction.query_scoped().filter_by(wallet_id=wallet.id).delete()
-        
-        for prod_id in data:
-            if Product.query_scoped().filter_by(id=prod_id).first():
-                new_restriction = WalletProductRestriction(wallet_id=wallet.id, product_id=prod_id)
-                db.session.add(new_restriction)
-                
-        db.session.commit()
-        db.session.refresh(wallet)
-        return jsonify(wallet_schema.dump(wallet)), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": str(e)}), 500
+    
+    # Busca transações ordenadas pela data de criação em ordem decrescente (mais recentes primeiro)
+    transactions = sorted(wallet.transactions, key=lambda t: t.created_at, reverse=True)
+    
+    # Criamos um schema focado na lista de transações
+    from app.api.schemas import WalletTransactionSchema
+    schema = WalletTransactionSchema(many=True)
+    return jsonify(schema.dump(transactions)), 200
