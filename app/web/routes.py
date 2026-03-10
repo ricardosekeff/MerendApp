@@ -9,6 +9,13 @@ def index():
     """Renderiza o Dashboard principal."""
     return render_template("index.html")
 
+@web_bp.route("/admin/users")
+@login_required
+def list_users():
+    """Placeholder transitório do painel de controle corporativo."""
+    flash("O Módulo completo de Gestão de Usuários está mapeado e entrará em fase de produção nas próximas Sprints.", "info")
+    return redirect(url_for("web.index"))
+
 @web_bp.route("/login", methods=["GET", "POST"])
 def login():
     """Gerencia o login na interface web."""

@@ -75,7 +75,6 @@ def set_wallet_limits(wallet_id):
                 db.session.add(new_limit)
 
         db.session.commit()
-        
         # Reload relation
         db.session.refresh(wallet)
         return jsonify(wallet_schema.dump(wallet)), 200
@@ -83,3 +82,35 @@ def set_wallet_limits(wallet_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
+
+@api_bp.route("/wallets/<uuid:wallet_id>/recharge_permission", methods=["PUT"])
+@jwt_required()
+def update_recharge_permission(wallet_id):
+    """Atualiza a permissão de recarga do estudante."""
+    wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
+    data = request.get_json()
+    
+    if "student_can_recharge" not in data:
+        return jsonify({"message": "Missing 'student_can_recharge' field"}), 400
+
+    try:
+        wallet.student_can_recharge = bool(data["student_can_recharge"])
+        db.session.commit()
+        return jsonify(wallet_schema.dump(wallet)), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500
+
+@api_bp.route("/wallets/<uuid:wallet_id>/transactions", methods=["GET"])
+@jwt_required()
+def get_wallet_transactions(wallet_id):
+    """Retorna o extrato de transações da carteira do usuário."""
+    wallet = Wallet.query_scoped().filter_by(id=wallet_id).first_or_404()
+    
+    # Busca transações ordenadas pela data de criação em ordem decrescente (mais recentes primeiro)
+    transactions = sorted(wallet.transactions, key=lambda t: t.created_at, reverse=True)
+    
+    # Criamos um schema focado na lista de transações
+    from app.api.schemas import WalletTransactionSchema
+    schema = WalletTransactionSchema(many=True)
+    return jsonify(schema.dump(transactions)), 200
